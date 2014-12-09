@@ -1,0 +1,15 @@
+.classpath
+.project
+bin/
+build/
+reports/
+*~
+*.out
+.DS_Store*
+*.iml
+.idea/
+.externalToolBuilders/
+.gwt/
+out/
+*.pyc
+

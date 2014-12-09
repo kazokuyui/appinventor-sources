@@ -177,8 +177,13 @@ public final class ErrorMessages {
   //FusiontablesControl errors
   public static final int FUSION_TABLES_QUERY_ERROR = 2601;
 
-  // Please start the next group of error numbers at 2701.
+  // WifiDirect errors
+  public static final int ERROR_WIFIDIRECT_UNSUPPORTED_ENCODING = 2701;
+  public static final int ERROR_WIFIDIRECT_UNABLE_TO_READ = 2702;
+  public static final int ERROR_WIFIDIRECT_UNABLE_TO_WRITE = 2703;
+  public static final int ERROR_WIFIDIRECT_REGISTRATION_FAILED = 2704;
 
+  // Please start the next group of error numbers at 2701.
 
   // Mapping of error numbers to error message format strings.
   private static final Map<Integer, String> errorMessages;
@@ -446,6 +451,11 @@ public final class ErrorMessages {
     // FusiontablesControl error
     errorMessages.put(FUSION_TABLES_QUERY_ERROR, "Fusion tables returned an error. The query was: %s. " +
        "The response was: %s");
+    //WifiDirect Errors
+    errorMessages.put(ERROR_WIFIDIRECT_UNSUPPORTED_ENCODING, "Encoding is not supported");
+    errorMessages.put(ERROR_WIFIDIRECT_UNABLE_TO_READ, "Unable to read: %s");
+    errorMessages.put(ERROR_WIFIDIRECT_UNABLE_TO_WRITE, "Unable to write: %s");
+    errorMessages.put(ERROR_WIFIDIRECT_REGISTRATION_FAILED, "Unable to register to the owner: %s");
   }
 
   private ErrorMessages() {

@@ -491,4 +491,9 @@ public interface Images extends Resources {
   @Source("com/google/appinventor/images/proximitysensor.png")
   ImageResource proximitysensor();
 
+  /**
+   * Designer palette item: WifiDirect Components
+   */
+  @Source("com/google/appinventor/images/wifiDirect.png")
+  ImageResource wifiDirect();
 }

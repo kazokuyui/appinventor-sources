@@ -888,5 +888,8 @@ public class YaVersion {
   // Splash Screen Values
   public static final int SPLASH_SURVEY = 1;
 
+  // For WifiDirect Component
+  public static final int WIFIDIRECTPEER_COMPONENT_VERSION = 1;
+  public static final int WIFIDIRECTGROUPOWNER_COMPONENT_VERSION = 1;
 
 }
