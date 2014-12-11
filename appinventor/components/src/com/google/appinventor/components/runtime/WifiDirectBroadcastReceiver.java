@@ -3,11 +3,9 @@ package com.google.appinventor.components.runtime;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.util.Log;
 
 import static android.net.wifi.p2p.WifiP2pManager.*;
 
@@ -48,5 +46,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
     @Override
     public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
         WifiDirectClient client = (WifiDirectClient) this.base;
+        client.setDevices(wifiP2pDeviceList);
+        client.DevicesAvailable();
     }
 }
