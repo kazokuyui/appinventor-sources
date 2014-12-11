@@ -485,4 +485,10 @@ public interface Images extends Resources {
   @Source("com/google/appinventor/images/yandex.png")
   ImageResource yandex();
 
+  /**
+   * Designer palette item: WifiDirect Components
+   */
+  @Source("com/google/appinventor/images/wifiDirect.png")
+  ImageResource wifiDirect();
+
 }
