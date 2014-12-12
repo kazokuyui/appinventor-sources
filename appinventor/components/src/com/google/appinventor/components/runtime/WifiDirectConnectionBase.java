@@ -48,7 +48,7 @@ public abstract class WifiDirectConnectionBase extends AndroidNonvisibleComponen
         this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        form.registerReceiver(this.receiver, null);
+        form.registerReceiver(this.receiver, this.intentFilter);
         CharacterEncoding("UTF-8");
     }
 
