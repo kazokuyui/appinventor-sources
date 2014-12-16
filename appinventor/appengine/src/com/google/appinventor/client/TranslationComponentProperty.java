@@ -41,6 +41,10 @@ public class TranslationComponentProperty {
     map.put("CurrentUrl", MESSAGES.CurrentUrlProperties());
     map.put("Accuracy", MESSAGES.AccuracyProperties());
     map.put("AddressesAndNames", MESSAGES.AddressesAndNamesProperties());
+    map.put("AvailableDevices", MESSAGES.AvailableDevicesProperties());
+    map.put("AvailablePeers", MESSAGES.AvailablePeersProperties());
+    map.put("GroupOwner", MESSAGES.GroupOwnerProperties());
+    map.put("Connected", MESSAGES.ConnectedProperties());
     map.put("Altitude", MESSAGES.AltitudeProperties());
     map.put("Angle", MESSAGES.AngleProperties());
     map.put("Animation", MESSAGES.AnimationProperties());

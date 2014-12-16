@@ -55,6 +55,8 @@ public class TranslationComponentMethods {
     map.put("Connect", MESSAGES.ConnectMethods());
     map.put("ConnectWithUUID", MESSAGES.ConnectWithUUIDMethods());
     map.put("Disconnect", MESSAGES.DisconnectMethods());
+    map.put("DiscoverDevices", MESSAGES.DiscoverDevicesMethods());
+    map.put("RequestPeers", MESSAGES.RequestPeersMethods());
     map.put("IsDevicePaired", MESSAGES.IsDevicePairedMethods());
     map.put("ReceiveSigned1ByteNumber", MESSAGES.ReceiveSigned1ByteNumberMethods());
     map.put("ReceiveSigned2ByteNumber", MESSAGES.ReceiveSigned2ByteNumberMethods());
