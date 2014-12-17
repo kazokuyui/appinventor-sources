@@ -57,6 +57,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     private Socket socket;
     private int port;
     private int bufferSize;
+    private int timeOut;
 
     public WifiDirectClient(ComponentContainer container) {
         this(container.$form(), "WifiDirectClient");
@@ -81,6 +82,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         this.isAvailable = false;
         this.isConnected = false;
         this.bufferSize = 1024;
+        this.timeOut = 5000;
     }
 
     @SimpleEvent(description = "List of nearby devices is available")
@@ -105,7 +107,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
 
     @SimpleEvent(description = "Text is received")
     public void TextReceived(String text) {
-        EventDispatcher.dispatchEvent(this, "DataReceived", text);
+        EventDispatcher.dispatchEvent(this, "TextReceived", text);
     }
 
     @SimpleEvent
@@ -235,13 +237,13 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     }
 
     @SimpleFunction(description = "Send a message to a peer")
-    public void SendText(String address, String text){
+    public void SendText(String address, int port, String text){
         byte[] buffer = new byte[this.bufferSize];
         int length;
-
+        this.port = port;
         try{
             this.socket.bind(null);
-            this.socket.connect(new InetSocketAddress(address, 4545), 5000);
+            this.socket.connect(new InetSocketAddress(address, this.port), this.timeOut);
 
             OutputStream outputStream = socket.getOutputStream();
             InputStream inputStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
