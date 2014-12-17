@@ -174,8 +174,12 @@ public final class ErrorMessages {
   // WebViewer errors
   public static final int ERROR_WEBVIEW_SSL_ERROR = 2501;
 
-  // Please start the next group of error numbers at 2601.
 
+  // WifiDirect errors
+  public static final int ERROR_WIFIDIRECT_UNSUPPORTED_ENCODING = 2601;
+  public static final int ERROR_WIFIDIRECT_UNABLE_TO_READ = 2602;
+
+  // Please start the next group of error numbers at 3601.
 
   // Mapping of error numbers to error message format strings.
   private static final Map<Integer, String> errorMessages;
@@ -440,6 +444,9 @@ public final class ErrorMessages {
     //DatePicker errors
     errorMessages.put(ERROR_ILLEGAL_DATE, "The date you entered is invalid.");
     errorMessages.put(ERROR_WEBVIEW_SSL_ERROR, "SSL Connection could not complete.");
+    //WifiDirect Errors
+    errorMessages.put(ERROR_WIFIDIRECT_UNSUPPORTED_ENCODING, "Encoding is not supported");
+    errorMessages.put(ERROR_WIFIDIRECT_UNABLE_TO_READ, "Unable to read: %s");
   }
 
   private ErrorMessages() {

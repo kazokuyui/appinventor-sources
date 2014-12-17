@@ -46,8 +46,12 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
                     getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
 
             if (networkInfo.isConnected()) {
+
                 this.client.DeviceConnected();
             }
+
+            this.client.setIsConnected(networkInfo.isConnected());
+            this.client.setIsAvailable(networkInfo.isAvailable());
         }
     }
 

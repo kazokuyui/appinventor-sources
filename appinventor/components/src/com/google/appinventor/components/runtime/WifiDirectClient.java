@@ -6,18 +6,18 @@ import android.content.IntentFilter;
 import android.net.wifi.p2p.*;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
-import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.util.AsynchUtil;
-import sun.misc.IOUtils;
+import com.google.appinventor.components.runtime.util.ErrorMessages;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author nmcalabroso@up.edu.ph (neil)
@@ -40,8 +40,9 @@ import java.util.concurrent.ExecutionException;
 public final class WifiDirectClient extends AndroidNonvisibleComponent implements
         Component, Deleteable, OnDestroyListener {
 
-    protected final String logTag;
-    protected String encoding;
+    protected final String TAG;
+    protected boolean isAvailable;
+    protected boolean isConnected;
 
     protected WifiP2pManager manager;
     protected WifiP2pManager.Channel channel;
@@ -54,15 +55,17 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     private WifiP2pInfo connectionInfo;
 
     private Socket socket;
+    private int port;
+    private int bufferSize;
 
     public WifiDirectClient(ComponentContainer container) {
         this(container.$form(), "WifiDirectClient");
         form.registerForOnDestroy(this);
     }
 
-    private WifiDirectClient(Form form, String logTag) {
+    private WifiDirectClient(Form form, String TAG) {
         super(form);
-        this.logTag = logTag;
+        this.TAG = TAG;
 
         this.manager = (WifiP2pManager) form.getSystemService(Context.WIFI_P2P_SERVICE);
         this.channel = this.manager.initialize(form, form.getMainLooper(), null);
@@ -75,7 +78,9 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         form.registerReceiver(this.receiver, this.intentFilter);
 
         socket = new Socket();
-        CharacterEncoding("UTF-8");
+        this.isAvailable = false;
+        this.isConnected = false;
+        this.bufferSize = 1024;
     }
 
     @SimpleEvent(description = "List of nearby devices is available")
@@ -98,40 +103,27 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         EventDispatcher.dispatchEvent(this, "ConnectionInfoAvailable");
     }
 
+    @SimpleEvent(description = "Text is received")
+    public void TextReceived(String text) {
+        EventDispatcher.dispatchEvent(this, "DataReceived", text);
+    }
+
     @SimpleEvent
     public void Trigger(String msg){
         /*sample event for testing purposes*/
         EventDispatcher.dispatchEvent(this, "Trigger", msg);
     }
 
-    @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_STRING,
-            defaultValue = "UTF-8")
-    @SimpleProperty
-    public void CharacterEncoding(String encoding) {
-        try {
-            "check".getBytes(encoding);
-            this.encoding = encoding;
-        }catch (UnsupportedEncodingException ignored) {
-
-        }
-    }
-
-    @SimpleProperty(description = "Whether WiFi Direct is available on the device",
+    @SimpleProperty(description = "Whether WiFi Direct connection is available on the device",
             category = PropertyCategory.BEHAVIOR)
     public boolean Available() {
-        return true;
-    }
-
-    @SimpleProperty(description = "Whether WiFi Direct is enabled on the device",
-            category = PropertyCategory.BEHAVIOR)
-    public boolean Enabled() {
-        return true;
+      return this.isAvailable;
     }
 
     @SimpleProperty(description = "Whether the device is connected to another device",
             category = PropertyCategory.BEHAVIOR)
     public boolean Connected() {
-        return true;
+        return this.isConnected;
     }
 
     @SimpleProperty(description = "Returns the Group owner of the P2P group",
@@ -143,7 +135,6 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     @SimpleProperty(description = "Returns the Group owner's host address")
     public String GroupOwnerHostAddress() {
         return this.connectionInfo.groupOwnerAddress.getHostAddress();
-
     }
 
     @SimpleProperty(description = "All the available devices near you",
@@ -155,11 +146,11 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
                 availableDevices.add(deviceToString(device)); //temp
             }
         }
-
         return availableDevices;
     }
 
-    @SimpleProperty(description = "All the available peers in the network", category = PropertyCategory.BEHAVIOR)
+    @SimpleProperty(description = "All the available peers in the network",
+            category = PropertyCategory.BEHAVIOR)
     public List<String> AvailablePeers() {
         List<String> peers = new ArrayList<String>();
         for(WifiP2pDevice peer: this.peers) {
@@ -199,7 +190,6 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         config.deviceAddress = address;
 
         this.manager.connect(this.channel, config, new WifiP2pManager.ActionListener() {
-
             @Override
             public void onSuccess() {
 
@@ -213,18 +203,20 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     }
 
     @SimpleFunction(description = "Receive a message from a peer")
-    public void ReceiveMessage() {
+    public void ReceiveText(int port) {
+        this.port = port;
+
         AsynchUtil.runAsynchronously(new Runnable() {
             @Override
             public void run() {
                 try {
-                    ServerSocket serverSocket = new ServerSocket(4545);
+                    ServerSocket serverSocket = new ServerSocket(WifiDirectClient.this.port);
                     Socket client = serverSocket.accept();
 
                     InputStream inputStream = client.getInputStream();
                     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
                     int length;
-                    byte[] data = new byte[1024];
+                    byte[] data = new byte[WifiDirectClient.this.bufferSize];
 
                     while((length = inputStream.read(data, 0, data.length)) != -1){
                         buffer.write(data, 0, length);
@@ -232,17 +224,19 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
 
                     String msg = buffer.toString();
 
-                    Trigger(msg+"wow");
-                } catch (Exception e) {
-                    Trigger(e.toString());
+                    TextReceived(msg);
+                } catch (IOException e) {
+                    wifiDirectError("ReceiveText",
+                            ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                            e.getMessage());
                 }
             }
         });
     }
 
     @SimpleFunction(description = "Send a message to a peer")
-    public void SendMessage(String address, String message){
-        byte buffer[] = new byte[1024];
+    public void SendText(String address, String text){
+        byte[] buffer = new byte[this.bufferSize];
         int length;
 
         try{
@@ -250,7 +244,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
             this.socket.connect(new InetSocketAddress(address, 4545), 5000);
 
             OutputStream outputStream = socket.getOutputStream();
-            InputStream inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+            InputStream inputStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
 
             while((length = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, length);
@@ -258,17 +252,19 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
 
             outputStream.close();
             inputStream.close();
-
         } catch (IOException e) {
-            e.printStackTrace();
-            Trigger(e.toString());
+            wifiDirectError("SendText",
+                    ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                    e.getMessage());
         } finally {
             if(this.socket != null) {
                 if(this.socket.isConnected()) {
                     try {
                         this.socket.close();
                     }catch (IOException e){
-                        e.printStackTrace();
+                        wifiDirectError("SendText",
+                                ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                                e.getMessage());
                     }
                 }
             }
@@ -291,8 +287,20 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         this.connectionInfo = connectionInfo;
     }
 
+    public void setIsAvailable(boolean isAvailable) {
+        this.isAvailable = isAvailable;
+    }
+
+    public void setIsConnected(boolean isConnected) {
+        this.isConnected = isConnected;
+    }
+
     public String deviceToString(WifiP2pDevice device) {
         return "[" + device.deviceName + "] " + device.deviceAddress;
+    }
+
+    protected void wifiDirectError(String functionName, int errorCode, Object... args) {
+        this.form.dispatchErrorOccurredEvent(this, functionName, errorCode, args);
     }
 
     @Override

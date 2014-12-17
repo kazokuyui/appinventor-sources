@@ -3625,6 +3625,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String ConnectionInfoAvailableEvents();
 
+  @DefaultMessage("TextReceived")
+  @Description("")
+  String TextReceivedEvents();
+
   @DefaultMessage("Trigger")
   @Description("")
   String TriggerEvents();
