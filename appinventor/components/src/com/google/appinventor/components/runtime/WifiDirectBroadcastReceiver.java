@@ -53,7 +53,8 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
 
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
-
+        this.client.setConnectionInfo(wifiP2pInfo);
+        this.client.ConnectionInfoAvailable();
     }
 
     @Override

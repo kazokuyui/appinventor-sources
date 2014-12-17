@@ -234,6 +234,7 @@ public interface OdeMessages extends Messages {
   @Description("Label of the Send Message of reportlist")
   String buttonSendMessage();
 
+
   @DefaultMessage("Deactivate App")
   @Description("Label of the Deactivate App on message of reportlist")
   String labelDeactivateApp();
@@ -2246,6 +2247,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GroupOwnerProperties();
 
+  @DefaultMessage("GroupOwnerHostAddress")
+  @Description("")
+  String GroupOwnerHostAddressProperties();
+
   @DefaultMessage("ApiKey")
   @Description("")
   String ApiKeyProperties();
@@ -3616,6 +3621,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DeviceConnectedEvents();
 
+  @DefaultMessage("ConnectionInfoAvailable")
+  @Description("")
+  String ConnectionInfoAvailableEvents();
+
   @DefaultMessage("Trigger")
   @Description("")
   String TriggerEvents();
@@ -4004,6 +4013,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("RequestPeers")
   @Description("")
   String RequestPeersMethods();
+
+  @DefaultMessage("RequestConnectionInfo")
+  @Description("")
+  String RequestConnectionInfoMethods();
 
   @DefaultMessage("IsDevicePaired")
   @Description("")
@@ -4552,6 +4565,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("SendMessage")
   @Description("")
   String SendMessageMethods();
+
+  @DefaultMessage("ReceiveMessage")
+  @Description("")
+  String ReceiveMessageMethods();
 
   @DefaultMessage("GetValue")
   @Description("")

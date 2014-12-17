@@ -8,12 +8,16 @@ import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.util.AsynchUtil;
+import sun.misc.IOUtils;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author nmcalabroso@up.edu.ph (neil)
@@ -29,7 +33,9 @@ import java.util.Set;
                 "android.permission.CHANGE_WIFI_STATE, " +
                 "android.permission.CHANGE_NETWORK_STATE, " +
                 "android.permission.ACCESS_NETWORK_STATE, " +
-                "android.permission.CHANGE_WIFI_MULTICAST_STATE")
+                "android.permission.CHANGE_WIFI_MULTICAST_STATE, " +
+                "android.permission.INTERNET, " +
+                "android.permission.READ_PHONE_STATE")
 
 public final class WifiDirectClient extends AndroidNonvisibleComponent implements
         Component, Deleteable, OnDestroyListener {
@@ -45,6 +51,9 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     private WifiP2pDeviceList devices = new WifiP2pDeviceList();
     private Collection<WifiP2pDevice> peers;
     private WifiP2pDevice groupOwner;
+    private WifiP2pInfo connectionInfo;
+
+    private Socket socket;
 
     public WifiDirectClient(ComponentContainer container) {
         this(container.$form(), "WifiDirectClient");
@@ -65,6 +74,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
         form.registerReceiver(this.receiver, this.intentFilter);
 
+        socket = new Socket();
         CharacterEncoding("UTF-8");
     }
 
@@ -81,6 +91,11 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     @SimpleEvent(description = "Peers Info is available")
     public void PeersAvailable() {
         EventDispatcher.dispatchEvent(this, "PeersAvailable");
+    }
+
+    @SimpleEvent(description = "Connection Info is available")
+    public void ConnectionInfoAvailable() {
+        EventDispatcher.dispatchEvent(this, "ConnectionInfoAvailable");
     }
 
     @SimpleEvent
@@ -125,6 +140,12 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         return deviceToString(this.groupOwner);
     }
 
+    @SimpleProperty(description = "Returns the Group owner's host address")
+    public String GroupOwnerHostAddress() {
+        return this.connectionInfo.groupOwnerAddress.getHostAddress();
+
+    }
+
     @SimpleProperty(description = "All the available devices near you",
             category = PropertyCategory.BEHAVIOR)
     public List<String> AvailableDevices() {
@@ -167,6 +188,11 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         this.manager.requestGroupInfo(this.channel, (WifiP2pManager.GroupInfoListener) this.receiver);
     }
 
+    @SimpleFunction(description = "Request connection info")
+    public void RequestConnectionInfo(){
+        this.manager.requestConnectionInfo(this.channel, (WifiP2pManager.ConnectionInfoListener) this.receiver);
+    }
+
     @SimpleFunction(description = "Connect to a certain device")
     public void Connect(String address) {
         WifiP2pConfig config = new WifiP2pConfig();
@@ -186,9 +212,67 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         });
     }
 
+    @SimpleFunction(description = "Receive a message from a peer")
+    public void ReceiveMessage() {
+        AsynchUtil.runAsynchronously(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ServerSocket serverSocket = new ServerSocket(4545);
+                    Socket client = serverSocket.accept();
+
+                    InputStream inputStream = client.getInputStream();
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    int length;
+                    byte[] data = new byte[1024];
+
+                    while((length = inputStream.read(data, 0, data.length)) != -1){
+                        buffer.write(data, 0, length);
+                    }
+
+                    String msg = buffer.toString();
+
+                    Trigger(msg+"wow");
+                } catch (Exception e) {
+                    Trigger(e.toString());
+                }
+            }
+        });
+    }
+
     @SimpleFunction(description = "Send a message to a peer")
     public void SendMessage(String address, String message){
-        return;
+        byte buffer[] = new byte[1024];
+        int length;
+
+        try{
+            this.socket.bind(null);
+            this.socket.connect(new InetSocketAddress(address, 4545), 5000);
+
+            OutputStream outputStream = socket.getOutputStream();
+            InputStream inputStream = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
+
+            while((length = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, length);
+            }
+
+            outputStream.close();
+            inputStream.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Trigger(e.toString());
+        } finally {
+            if(this.socket != null) {
+                if(this.socket.isConnected()) {
+                    try {
+                        this.socket.close();
+                    }catch (IOException e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
     }
 
     public void setAvailableDevices(WifiP2pDeviceList wifiP2pDeviceList) {
@@ -201,6 +285,10 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
 
     public void setGroupOwner(WifiP2pDevice groupOwner) {
         this.groupOwner = groupOwner;
+    }
+
+    public void setConnectionInfo(WifiP2pInfo connectionInfo) {
+        this.connectionInfo = connectionInfo;
     }
 
     public String deviceToString(WifiP2pDevice device) {
