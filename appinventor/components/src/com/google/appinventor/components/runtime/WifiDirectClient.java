@@ -224,9 +224,15 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
                         buffer.write(data, 0, length);
                     }
 
-                    String msg = buffer.toString();
+                    final String msg = buffer.toString();
 
-                    TextReceived(msg);
+                    WifiDirectClient.this.form.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            TextReceived(msg);
+                        }
+                    });
+
                 } catch (IOException e) {
                     wifiDirectError("ReceiveText",
                             ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
