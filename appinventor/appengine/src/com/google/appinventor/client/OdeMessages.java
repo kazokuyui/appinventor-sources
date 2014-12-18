@@ -2243,6 +2243,18 @@ public interface OdeMessages extends Messages {
   @Description("")
   String AvailablePeersProperties();
 
+  @DefaultMessage("DeviceName")
+  @Description("")
+  String DeviceNameProperties();
+
+  @DefaultMessage("DeviceAddress")
+  @Description("")
+  String DeviceAddressProperties();
+
+  @DefaultMessage("DeviceStatus")
+  @Description("")
+  String DeviceStatusProperties();
+
   @DefaultMessage("GroupOwner")
   @Description("")
   String GroupOwnerProperties();
@@ -3616,6 +3628,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("DevicesAvailable")
   @Description("")
   String DevicesAvailableEvents();
+
+  @DefaultMessage("DeviceInfoAvailable")
+  @Description("")
+  String DeviceInfoAvailableEvents();
 
   @DefaultMessage("DeviceConnected")
   @Description("")

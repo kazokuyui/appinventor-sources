@@ -51,6 +51,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
 
     private WifiP2pDeviceList devices = new WifiP2pDeviceList();
     private Collection<WifiP2pDevice> peers;
+    private WifiP2pDevice device;
     private WifiP2pDevice groupOwner;
     private WifiP2pInfo connectionInfo;
 
@@ -90,13 +91,18 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         EventDispatcher.dispatchEvent(this, "DevicesAvailable");
     }
 
+    @SimpleEvent(description = "Device Info is available")
+    public void DeviceInfoAvailable() {
+        EventDispatcher.dispatchEvent(this, "DeviceInfoAvailable");
+    }
+
     @SimpleEvent(description = "Device is connected")
     public void DeviceConnected(){
         EventDispatcher.dispatchEvent(this, "DeviceConnected");
     }
 
     @SimpleEvent(description = "Peers Info is available")
-    public void PeersAvailable() {
+    public void PeersAvailable()  {
         EventDispatcher.dispatchEvent(this, "PeersAvailable");
     }
 
@@ -126,6 +132,47 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
             category = PropertyCategory.BEHAVIOR)
     public boolean Connected() {
         return this.isConnected;
+    }
+
+    @SimpleProperty(description = "Returns name of the device",
+            category = PropertyCategory.BEHAVIOR)
+    public String DeviceName() {
+        if(this.device != null) {
+            return this.device.deviceName;
+        }
+        return "My Device";
+    }
+
+    @SimpleProperty(description = "Returns MAC address of the device",
+            category = PropertyCategory.BEHAVIOR)
+    public String DeviceAddress() {
+        if(this.device != null) {
+            return this.device.deviceAddress;
+        }
+        return "Unavailable";
+    }
+
+    @SimpleProperty(description = "Returns status of the device",
+            category = PropertyCategory.BEHAVIOR)
+    public String DeviceStatus() {
+        if(this.device != null) {
+            int status = this.device.status;
+            switch (status) {
+                case WifiP2pDevice.AVAILABLE:
+                    return "Available";
+                case WifiP2pDevice.INVITED:
+                    return "Invited";
+                case WifiP2pDevice.CONNECTED:
+                    return "Connected";
+                case WifiP2pDevice.FAILED:
+                    return "Failed";
+                case WifiP2pDevice.UNAVAILABLE:
+                    return "Unavailable";
+                default:
+                    return "Unknown: " + Integer.toString(status);
+            }
+        }
+        return "Unknown";
     }
 
     @SimpleProperty(description = "Returns the Group owner of the P2P group",
@@ -288,6 +335,10 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
 
     public void setPeers(Collection<WifiP2pDevice> peers) {
         this.peers = peers;
+    }
+
+    public void setDevice(WifiP2pDevice device) {
+        this.device = device;
     }
 
     public void setGroupOwner(WifiP2pDevice groupOwner) {

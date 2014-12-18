@@ -32,26 +32,30 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        if (WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
+
+        if(WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
             if (manager != null) {
                 manager.requestPeers(channel, this);
             }
         }
-        else if (WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
+        else if(WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
             if (manager == null) {
                 return;
             }
 
             NetworkInfo networkInfo = (NetworkInfo) intent.
-                    getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
+                    getParcelableExtra(EXTRA_NETWORK_INFO);
 
             if (networkInfo.isConnected()) {
-
                 this.client.DeviceConnected();
             }
 
             this.client.setIsConnected(networkInfo.isConnected());
             this.client.setIsAvailable(networkInfo.isAvailable());
+        }
+        else if(WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
+            this.client.setDevice((WifiP2pDevice) intent.getParcelableExtra(EXTRA_WIFI_P2P_DEVICE));
+            this.client.DeviceInfoAvailable();
         }
     }
 

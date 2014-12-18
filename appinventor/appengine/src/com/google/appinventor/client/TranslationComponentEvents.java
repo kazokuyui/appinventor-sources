@@ -45,6 +45,7 @@ public class TranslationComponentEvents {
     // Events
     map.put("AccelerationChanged", MESSAGES.AccelerationChangedEvents());
     map.put("DevicesAvailable", MESSAGES.DevicesAvailableEvents());
+    map.put("DeviceInfoAvailable", MESSAGES.DeviceInfoAvailableEvents());
     map.put("DeviceConnected", MESSAGES.DeviceConnectedEvents());
     map.put("PeersAvailable", MESSAGES.PeersAvailableEvents());
     map.put("ConnectionInfoAvailable", MESSAGES.ConnectionInfoAvailableEvents());
