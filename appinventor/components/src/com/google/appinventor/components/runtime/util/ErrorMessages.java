@@ -178,6 +178,7 @@ public final class ErrorMessages {
   // WifiDirect errors
   public static final int ERROR_WIFIDIRECT_UNSUPPORTED_ENCODING = 2601;
   public static final int ERROR_WIFIDIRECT_UNABLE_TO_READ = 2602;
+  public static final int ERROR_WIFIDIRECT_UNABLE_TO_WRITE = 2603;
 
   // Please start the next group of error numbers at 3601.
 
@@ -447,6 +448,7 @@ public final class ErrorMessages {
     //WifiDirect Errors
     errorMessages.put(ERROR_WIFIDIRECT_UNSUPPORTED_ENCODING, "Encoding is not supported");
     errorMessages.put(ERROR_WIFIDIRECT_UNABLE_TO_READ, "Unable to read: %s");
+    errorMessages.put(ERROR_WIFIDIRECT_UNABLE_TO_WRITE, "Unable to write: %s");
   }
 
   private ErrorMessages() {
