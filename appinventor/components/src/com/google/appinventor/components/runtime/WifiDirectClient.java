@@ -213,25 +213,26 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
             public void run() {
                 try {
                     ServerSocket serverSocket = new ServerSocket(WifiDirectClient.this.port);
-                    Socket client = serverSocket.accept();
+                    while (true) {
+                        Socket client = serverSocket.accept();
 
-                    InputStream inputStream = client.getInputStream();
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    int length;
-                    byte[] data = new byte[WifiDirectClient.this.bufferSize];
-
-                    while((length = inputStream.read(data, 0, data.length)) != -1){
-                        buffer.write(data, 0, length);
-                    }
-
-                    final String msg = buffer.toString();
-
-                    WifiDirectClient.this.form.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            TextReceived(msg);
+                        InputStream inputStream = client.getInputStream();
+                        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                        int length;
+                        byte[] data = new byte[WifiDirectClient.this.bufferSize];
+                        while ((length = inputStream.read(data, 0, data.length)) != -1) {
+                            buffer.write(data, 0, length);
                         }
-                    });
+
+                        final String msg = buffer.toString();
+
+                        WifiDirectClient.this.form.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                TextReceived(msg);
+                            }
+                        });
+                    }
 
                 } catch (IOException e) {
                     wifiDirectError("ReceiveText",
@@ -247,6 +248,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         byte[] buffer = new byte[this.bufferSize];
         int length;
         this.port = port;
+        this.socket = new Socket();
         try{
             this.socket.bind(null);
             this.socket.connect(new InetSocketAddress(address, this.port), this.timeOut);
@@ -264,7 +266,8 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
             wifiDirectError("SendText",
                     ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
                     e.getMessage());
-        } finally {
+        }
+        finally {
             if(this.socket != null) {
                 if(this.socket.isConnected()) {
                     try {
