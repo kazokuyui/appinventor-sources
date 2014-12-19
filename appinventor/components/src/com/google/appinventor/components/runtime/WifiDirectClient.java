@@ -301,7 +301,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
             this.socket.connect(new InetSocketAddress(address, this.port), this.timeOut);
 
             OutputStream outputStream = socket.getOutputStream();
-            InputStream inputStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+            InputStream inputStream = new ByteArrayInputStream(text.getBytes());
 
             while((length = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, length);
