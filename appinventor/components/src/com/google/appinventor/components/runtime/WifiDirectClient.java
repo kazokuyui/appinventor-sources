@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.*;
+import android.widget.Toast;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.YaVersion;
@@ -11,9 +12,7 @@ import com.google.appinventor.components.runtime.util.AsynchUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,6 +53,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     private WifiP2pDevice device;
     private WifiP2pDevice groupOwner;
     private WifiP2pInfo connectionInfo;
+    private SntpClient clientTime; //testing
 
     private Socket socket;
     private int port;
@@ -72,6 +72,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
         this.manager = (WifiP2pManager) form.getSystemService(Context.WIFI_P2P_SERVICE);
         this.channel = this.manager.initialize(form, form.getMainLooper(), null);
         this.receiver = new WifiDirectBroadcastReceiver(this.manager, this.channel, this);
+        this.clientTime = new SntpClient();
 
         this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
@@ -237,6 +238,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     public void Connect(String address) {
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = address;
+        config.groupOwnerIntent = 0; // least probability to be GO
 
         this.manager.connect(this.channel, config, new WifiP2pManager.ActionListener() {
             @Override
@@ -265,11 +267,23 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
 
                         InputStream inputStream = client.getInputStream();
                         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                        int length;
-                        byte[] data = new byte[WifiDirectClient.this.bufferSize];
-                        while ((length = inputStream.read(data, 0, data.length)) != -1) {
-                            buffer.write(data, 0, length);
-                        }
+                        buffer.write(inputStream.read());
+
+                        WifiDirectClient.this.form.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // testing
+
+//                                long now = 0;
+//                                if (WifiDirectClient.this.clientTime.requestTime("time.upd.edu.ph", 30000)) {
+//                                    now = WifiDirectClient.this.clientTime.getNtpTime();
+//                                }
+//                                Toast.makeText(form,
+//                                        Long.toString(System.currentTimeMillis() + '\n' + now),
+//                                        TOAST_LENGTH_LONG).show();
+                                Trigger(Long.toString(System.currentTimeMillis()));
+                            }
+                        });
 
                         final String msg = buffer.toString();
 
@@ -277,8 +291,8 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
                             @Override
                             public void run() {
                                 TextReceived(msg);
-                            }
-                        });
+                    }
+                });
                     }
 
                 } catch (IOException e) {
@@ -303,9 +317,18 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
             OutputStream outputStream = socket.getOutputStream();
             InputStream inputStream = new ByteArrayInputStream(text.getBytes());
 
-            while((length = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, length);
-            }
+            outputStream.write(inputStream.read());
+
+            // testing
+//            long now = 0;
+//            if (this.clientTime.requestTime("time.upd.edu.ph", 30000)) {
+//                now = clientTime.getNtpTime();
+//            }
+//            Toast.makeText(form,
+//                    Long.toString(System.currentTimeMillis() + '\n' + now),
+//                    TOAST_LENGTH_LONG).show();
+            Trigger(Long.toString(System.currentTimeMillis()));
+
 
             outputStream.close();
             inputStream.close();
