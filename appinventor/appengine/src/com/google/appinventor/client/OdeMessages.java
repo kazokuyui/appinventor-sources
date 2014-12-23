@@ -2243,6 +2243,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String AvailablePeersProperties();
 
+  @DefaultMessage("LocalAddress")
+  @Description("")
+  String LocalAddressProperties();
+
   @DefaultMessage("DeviceName")
   @Description("")
   String DeviceNameProperties();

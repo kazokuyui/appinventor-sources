@@ -43,6 +43,7 @@ public class TranslationComponentProperty {
     map.put("AddressesAndNames", MESSAGES.AddressesAndNamesProperties());
     map.put("AvailableDevices", MESSAGES.AvailableDevicesProperties());
     map.put("AvailablePeers", MESSAGES.AvailablePeersProperties());
+    map.put("LocalAddress", MESSAGES.LocalAddressProperties());
     map.put("DeviceName", MESSAGES.DeviceNameProperties());
     map.put("DeviceAddress", MESSAGES.DeviceAddressProperties());
     map.put("DeviceStatus", MESSAGES.DeviceStatusProperties());

@@ -11,10 +11,7 @@ import com.google.appinventor.components.runtime.util.AsynchUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -206,6 +203,20 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
             peers.add(deviceToString(peer)); //temp
         }
         return peers;
+    }
+
+    @SimpleProperty(description = "My Local IP",
+                    category = PropertyCategory.BEHAVIOR)
+    public String LocalAddress() {
+        String address = "Unknown";
+        try {
+             address = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            wifiDirectError("LocalAddress",
+                    ErrorMessages.ERROR_BLUETOOTH_UNABLE_TO_READ,
+                    e.getMessage());
+        }
+        return address;
     }
 
     @SimpleFunction(description = "Scan all devices nearby")
