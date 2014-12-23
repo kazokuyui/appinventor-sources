@@ -248,6 +248,7 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
     public void Connect(String address) {
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = address;
+        config.groupOwnerIntent = 0; // least probability to be GO
 
         this.manager.connect(this.channel, config, new WifiP2pManager.ActionListener() {
             @Override
@@ -276,11 +277,23 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
 
                         InputStream inputStream = client.getInputStream();
                         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                        int length;
-                        byte[] data = new byte[WifiDirectClient.this.bufferSize];
-                        while ((length = inputStream.read(data, 0, data.length)) != -1) {
-                            buffer.write(data, 0, length);
-                        }
+                        buffer.write(inputStream.read());
+
+                        WifiDirectClient.this.form.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // testing
+
+//                                long now = 0;
+//                                if (WifiDirectClient.this.clientTime.requestTime("time.upd.edu.ph", 30000)) {
+//                                    now = WifiDirectClient.this.clientTime.getNtpTime();
+//                                }
+//                                Toast.makeText(form,
+//                                        Long.toString(System.currentTimeMillis() + '\n' + now),
+//                                        TOAST_LENGTH_LONG).show();
+                                Trigger(Long.toString(System.currentTimeMillis()));
+                            }
+                        });
 
                         final String msg = buffer.toString();
 
@@ -288,8 +301,8 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
                             @Override
                             public void run() {
                                 TextReceived(msg);
-                            }
-                        });
+                    }
+                });
                     }
 
                 } catch (IOException e) {
@@ -314,9 +327,18 @@ public final class WifiDirectClient extends AndroidNonvisibleComponent implement
             OutputStream outputStream = socket.getOutputStream();
             InputStream inputStream = new ByteArrayInputStream(text.getBytes());
 
-            while((length = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, length);
-            }
+            outputStream.write(inputStream.read());
+
+            // testing
+//            long now = 0;
+//            if (this.clientTime.requestTime("time.upd.edu.ph", 30000)) {
+//                now = clientTime.getNtpTime();
+//            }
+//            Toast.makeText(form,
+//                    Long.toString(System.currentTimeMillis() + '\n' + now),
+//                    TOAST_LENGTH_LONG).show();
+            Trigger(Long.toString(System.currentTimeMillis()));
+
 
             outputStream.close();
             inputStream.close();
