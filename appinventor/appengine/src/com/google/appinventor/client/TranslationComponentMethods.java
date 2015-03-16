@@ -55,6 +55,13 @@ public class TranslationComponentMethods {
     map.put("Connect", MESSAGES.ConnectMethods());
     map.put("ConnectWithUUID", MESSAGES.ConnectWithUUIDMethods());
     map.put("Disconnect", MESSAGES.DisconnectMethods());
+    map.put("DiscoverDevices", MESSAGES.DiscoverDevicesMethods());
+    map.put("RegisterToNetwork", MESSAGES.RegisterToNetworkMethods());
+    map.put("RequestPeers", MESSAGES.RequestPeersMethods());
+    map.put("RequestConnectionInfo", MESSAGES.RequestConnectionInfoMethods());
+    map.put("SendData", MESSAGES.SendDataMethods());
+    map.put("ReceiveData", MESSAGES.ReceiveDataMethods());
+    map.put("BroadcastPeers", MESSAGES.BroadcastPeersMethods());
     map.put("IsDevicePaired", MESSAGES.IsDevicePairedMethods());
     map.put("ReceiveSigned1ByteNumber", MESSAGES.ReceiveSigned1ByteNumberMethods());
     map.put("ReceiveSigned2ByteNumber", MESSAGES.ReceiveSigned2ByteNumberMethods());
@@ -124,6 +131,7 @@ public class TranslationComponentMethods {
     map.put("LeaveInstance", MESSAGES.LeaveInstanceMethods());
     map.put("MakeNewInstance", MESSAGES.MakeNewInstanceMethods());
     map.put("SendMessage", MESSAGES.SendMessageMethods());
+    map.put("SendMessage", MESSAGES.ReceiveMessageMethods());
     map.put("ServerCommand", MESSAGES.ServerCommandMethods());
     map.put("SetInstance", MESSAGES.SetInstanceMethods());
     map.put("SetLeader", MESSAGES.SetLeaderMethods());

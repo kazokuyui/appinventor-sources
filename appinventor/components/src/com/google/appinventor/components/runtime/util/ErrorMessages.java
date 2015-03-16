@@ -180,8 +180,13 @@ public final class ErrorMessages {
   //TextToSpeech errors
   public static final int ERROR_TTS_NOT_READY = 2701;
 
-  // Please start the next group of error numbers at 2801.
+  // WifiDirect errors
+  public static final int ERROR_WIFIDIRECT_UNSUPPORTED_ENCODING = 2801;
+  public static final int ERROR_WIFIDIRECT_UNABLE_TO_READ = 2802;
+  public static final int ERROR_WIFIDIRECT_UNABLE_TO_WRITE = 2803;
+  public static final int ERROR_WIFIDIRECT_REGISTRATION_FAILED = 2804;
 
+  // Please start the next group of error numbers at 2901.
 
   // Mapping of error numbers to error message format strings.
   private static final Map<Integer, String> errorMessages;
@@ -452,6 +457,11 @@ public final class ErrorMessages {
     // TextToSpeech errors
     errorMessages.put(ERROR_TTS_NOT_READY,
        "TextToSpeech is not yet ready to perform this operation");
+    //WifiDirect Errors
+    errorMessages.put(ERROR_WIFIDIRECT_UNSUPPORTED_ENCODING, "Encoding is not supported");
+    errorMessages.put(ERROR_WIFIDIRECT_UNABLE_TO_READ, "Unable to read: %s");
+    errorMessages.put(ERROR_WIFIDIRECT_UNABLE_TO_WRITE, "Unable to write: %s");
+    errorMessages.put(ERROR_WIFIDIRECT_REGISTRATION_FAILED, "Unable to register to the owner: %s");
   }
 
   private ErrorMessages() {
