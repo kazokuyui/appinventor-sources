@@ -6,10 +6,7 @@ import android.net.wifi.p2p.WifiP2pDevice;
  * Utility class for WifiDirect Component
  *
  * @author nmcalabroso@up.edu.ph (neil)
-<<<<<<< HEAD
  * @author erbunao@up.edu.ph (earle)
-=======
->>>>>>> 98574e6... Implement WifiDirect Feature
  */
 public class WifiDirectUtil {
     public static final String REGISTER_TO_NETWORK = "registerToNetwork";
