@@ -28,7 +28,6 @@ public final class WifiDirectPeer extends WifiDirectBase {
     private Socket socket;
     private int port;
     private int timeOut;
-    private boolean isGroupOwner;
 
     public WifiDirectPeer(ComponentContainer container) {
         super(container, "WifiDirectClient");
@@ -62,24 +61,6 @@ public final class WifiDirectPeer extends WifiDirectBase {
     @SimpleFunction(description = "Request connection info")
     public void RequestConnectionInfo(){
         this.manager.requestConnectionInfo(this.channel, (WifiP2pManager.ConnectionInfoListener) this.receiver);
-    }
-
-    @SimpleFunction(description = "Connect to a certain device")
-    public void Connect(String MACAddress) {
-        WifiP2pConfig config = new WifiP2pConfig();
-        config.deviceAddress = MACAddress;
-
-        this.manager.connect(this.channel, config, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure(int i) {
-
-            }
-        });
     }
 
     @SimpleFunction(description = "Send data to a particular device")
