@@ -52,7 +52,8 @@ public class TranslationComponentEvents {
     map.put("GroupInfoAvailable", MESSAGES.GroupInfoAvailableEvents());
     map.put("DataReceived", MESSAGES.DataReceivedEvents());
     map.put("DataSent", MESSAGES.DataSentEvents());
-    map.put("ChannelDisconnected", MESSAGES.ChannelDisconnected());
+    map.put("ChannelDisconnected", MESSAGES.ChannelDisconnectedEvents());
+    map.put("DeviceRegistered", MESSAGES.DeviceRegisteredEvents());
     map.put("Trigger", MESSAGES.TriggerEvents());
     map.put("AfterActivity", MESSAGES.AfterActivityEvents());
     map.put("CollidedWith", MESSAGES.CollidedWithEvents());

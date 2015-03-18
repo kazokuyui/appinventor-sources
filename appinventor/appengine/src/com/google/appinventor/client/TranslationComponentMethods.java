@@ -56,7 +56,7 @@ public class TranslationComponentMethods {
     map.put("ConnectWithUUID", MESSAGES.ConnectWithUUIDMethods());
     map.put("Disconnect", MESSAGES.DisconnectMethods());
     map.put("DiscoverDevices", MESSAGES.DiscoverDevicesMethods());
-    map.put("RegisterToNetwork", MESSAGES.RegisterToNetworkMethods());
+    map.put("RegisterDevice", MESSAGES.RegisterDeviceMethods());
     map.put("RequestPeers", MESSAGES.RequestPeersMethods());
     map.put("RequestConnectionInfo", MESSAGES.RequestConnectionInfoMethods());
     map.put("SendData", MESSAGES.SendDataMethods());

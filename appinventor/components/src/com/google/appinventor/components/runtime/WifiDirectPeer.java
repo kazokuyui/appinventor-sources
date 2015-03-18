@@ -33,20 +33,15 @@ public final class WifiDirectPeer extends WifiDirectBase {
         super(container, "WifiDirectClient");
     }
 
-    @SimpleEvent(description = "Data is received")
-    public void DataReceived(String msg) {
-        EventDispatcher.dispatchEvent(this, "DataReceived", msg);
-    }
-
-    @SimpleEvent(description = "Data sent")
-    public void DataSent(String msg) {
-        EventDispatcher.dispatchEvent(this, "DataSent", msg);
-    }
-
     @SimpleProperty(description = "Returns the Group owner of the P2P group",
             category = PropertyCategory.BEHAVIOR)
     public String GroupOwner() {
         return WifiDirectUtil.deviceToString(this.groupOwner);
+    }
+
+    @SimpleEvent(description = "Device is now registered to the group owner")
+    public void DeviceRegistered(String IPAddress) {
+        EventDispatcher.dispatchEvent(this, "DeviceRegistered", IPAddress);
     }
 
     @SimpleProperty(description = "Returns the Group owner's host address")
@@ -57,16 +52,18 @@ public final class WifiDirectPeer extends WifiDirectBase {
         return WifiDirectUtil.defaultDeviceIPAddress;
     }
 
+    @SimpleFunction(description = "Registers device to the group owner")
+    public boolean RegisterDevice(int port) {
+        return true;
+    }
+
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")
     public void RequestPeers() {}
 
-    @SimpleFunction(description = "Request connection info")
-    public void RequestConnectionInfo(){
-        this.manager.requestConnectionInfo(this.channel, (WifiP2pManager.ConnectionInfoListener) this.receiver);
-    }
-
     @SimpleFunction(description = "Send data to a particular device")
     public void SendData(String address, int port) {}
+
+
 
     @Override
     public void onDelete() {}

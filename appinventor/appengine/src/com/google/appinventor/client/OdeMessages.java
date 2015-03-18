@@ -3722,9 +3722,13 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DataSentEvents();
 
+  @DefaultMessage("DeviceRegistered")
+  @Description("")
+  String DeviceRegisteredEvents();
+
   @DefaultMessage("ChannelDisconnected")
   @Description("")
-  String ChannelDisconnected();
+  String ChannelDisconnectedEvents();
 
   @DefaultMessage("Trigger")
   @Description("")
@@ -4123,9 +4127,9 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DiscoverDevicesMethods();
 
-  @DefaultMessage("RegisterToNetwork")
+  @DefaultMessage("RegisterDevice")
   @Description("")
-  String RegisterToNetworkMethods();
+  String RegisterDeviceMethods();
 
   @DefaultMessage("RequestPeers")
   @Description("")
