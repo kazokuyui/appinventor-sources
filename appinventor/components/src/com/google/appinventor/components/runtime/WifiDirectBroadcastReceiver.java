@@ -6,9 +6,6 @@ import android.content.Intent;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import static android.net.wifi.p2p.WifiP2pManager.*;
 
 /**

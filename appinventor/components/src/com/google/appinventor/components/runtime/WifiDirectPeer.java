@@ -1,8 +1,6 @@
 package com.google.appinventor.components.runtime;
 
-import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pManager;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.YaVersion;
@@ -62,8 +60,6 @@ public final class WifiDirectPeer extends WifiDirectBase {
 
     @SimpleFunction(description = "Send data to a particular device")
     public void SendData(String address, int port) {}
-
-
 
     @Override
     public void onDelete() {}
