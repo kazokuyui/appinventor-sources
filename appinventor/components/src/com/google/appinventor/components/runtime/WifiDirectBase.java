@@ -43,9 +43,10 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
     protected WifiP2pDevice mDevice;
     protected WifiP2pGroup mGroup;
     protected WifiP2pInfo mConnectionInfo;
+
+    protected String IPAddress;
     protected boolean isAvailable;
     protected boolean isConnected;
-    protected boolean isGroupOwner;
 
     protected WifiDirectBase(ComponentContainer container, String TAG) {
         this(container.$form(), TAG);
@@ -68,6 +69,7 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
 
         this.isAvailable = false;
         this.isConnected = false;
+        this.IPAddress = WifiDirectUtil.defaultDeviceIPAddress;
     }
 
     @SimpleEvent(description = "List of nearby devices is available")
@@ -151,11 +153,20 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
 
     @SimpleProperty(description = "Returns MAC address of the device",
             category = PropertyCategory.BEHAVIOR)
-    public String DeviceAddress() {
+    public String DeviceMACAddress() {
         if(this.mDevice != null) {
             return this.mDevice.deviceAddress;
         }
-        return WifiDirectUtil.defaultDeviceAddress;
+        return WifiDirectUtil.defaultDeviceMACAddress;
+    }
+
+    @SimpleProperty(description = "Returns the IP address of the device",
+            category = PropertyCategory.BEHAVIOR)
+    public String DeviceIPAddress() {
+        if(this.isConnected) {
+            return this.IPAddress;
+        }
+        return WifiDirectUtil.defaultDeviceIPAddress;
     }
 
     @SimpleProperty(description = "Returns status of the device",
@@ -188,7 +199,10 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
 
     @SimpleProperty(description = "Returns true if this device is a Group Owner")
     public boolean IsGroupOwner() {
-        return this.isGroupOwner;
+        if(this.mConnectionInfo != null) {
+            return this.mConnectionInfo.isGroupOwner;
+        }
+        return false;
     }
 
     @SimpleFunction(description = "Scan all devices nearby")

@@ -31,7 +31,6 @@ public final class WifiDirectPeer extends WifiDirectBase {
 
     public WifiDirectPeer(ComponentContainer container) {
         super(container, "WifiDirectClient");
-        this.isGroupOwner = false;
     }
 
     @SimpleEvent(description = "Data is received")
@@ -52,7 +51,10 @@ public final class WifiDirectPeer extends WifiDirectBase {
 
     @SimpleProperty(description = "Returns the Group owner's host address")
     public String GroupOwnerHostAddress() {
-        return this.mConnectionInfo.groupOwnerAddress.getHostAddress();
+        if(this.mConnectionInfo != null) {
+            return this.mConnectionInfo.groupOwnerAddress.getHostAddress();
+        }
+        return WifiDirectUtil.defaultDeviceIPAddress;
     }
 
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")

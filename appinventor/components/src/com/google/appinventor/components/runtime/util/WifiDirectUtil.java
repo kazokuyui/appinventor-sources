@@ -13,7 +13,8 @@ public class WifiDirectUtil {
     public static final String REGISTRATION_ACCEPTED = "registrationAccepted";
 
     public static final String defaultDeviceName = "MyDevice";
-    public static final String defaultDeviceAddress = "Unknown";
+    public static final String defaultDeviceMACAddress = "Unknown";
+    public static final String defaultDeviceIPAddress = "0.0.0.0";
     public static final int defaultServerPort = 4545;
     public static final int defaultBufferSize = 1024;
 

@@ -2252,9 +2252,13 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DeviceNameProperties();
 
-  @DefaultMessage("DeviceAddress")
+  @DefaultMessage("DeviceMACAddress")
   @Description("")
-  String DeviceAddressProperties();
+  String DeviceMACAddressProperties();
+
+  @DefaultMessage("DeviceIPAddress")
+  @Description("")
+  String DeviceIPAddressProperties();
 
   @DefaultMessage("DeviceStatus")
   @Description("")

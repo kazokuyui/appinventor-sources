@@ -52,7 +52,8 @@ public class TranslationComponentProperty {
     map.put("AvailablePeers", MESSAGES.AvailablePeersProperties());
     map.put("Device", MESSAGES.DeviceProperties());
     map.put("DeviceName", MESSAGES.DeviceNameProperties());
-    map.put("DeviceAddress", MESSAGES.DeviceAddressProperties());
+    map.put("DeviceMACAddress", MESSAGES.DeviceMACAddressProperties());
+    map.put("DeviceIPAddress", MESSAGES.DeviceIPAddressProperties());
     map.put("DeviceStatus", MESSAGES.DeviceStatusProperties());
     map.put("GroupOwner", MESSAGES.GroupOwnerProperties());
     map.put("GroupOwnerHostAddress", MESSAGES.GroupOwnerHostAddressProperties());
