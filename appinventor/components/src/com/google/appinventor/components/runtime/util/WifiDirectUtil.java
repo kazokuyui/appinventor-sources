@@ -1,5 +1,6 @@
 package com.google.appinventor.components.runtime.util;
 
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 
 /**
@@ -11,12 +12,14 @@ import android.net.wifi.p2p.WifiP2pDevice;
 public class WifiDirectUtil {
     public static final String REGISTER_TO_NETWORK = "registerToNetwork";
     public static final String REGISTRATION_ACCEPTED = "registrationAccepted";
+    public static final String REGISTRATION_INITIATED = "registrationInitiated";
 
     public static final String defaultDeviceName = "MyDevice";
     public static final String defaultDeviceMACAddress = "Unknown";
     public static final String defaultDeviceIPAddress = "0.0.0.0";
     public static final int defaultServerPort = 4545;
     public static final int defaultBufferSize = 1024;
+    public static final int defaultTimeOut = 1000;
 
     public static String deviceToString(WifiP2pDevice device) {
         return "[" + device.deviceName + "] " + device.deviceAddress;

@@ -4,9 +4,19 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.util.AsynchUtil;
+import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
+import java.io.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.SelectorProvider;
 
 /**
  * @author nmcalabroso@up.edu.ph (neil)
@@ -23,9 +33,8 @@ import java.net.Socket;
 public final class WifiDirectPeer extends WifiDirectBase {
 
     private WifiP2pDevice groupOwner;
-    private Socket socket;
-    private int port;
-    private int timeOut;
+    private Socket controlSocket;
+    private Socket clientSocket;
 
     public WifiDirectPeer(ComponentContainer container) {
         super(container, "WifiDirectClient");
@@ -52,7 +61,14 @@ public final class WifiDirectPeer extends WifiDirectBase {
 
     @SimpleFunction(description = "Registers device to the group owner")
     public boolean RegisterDevice(int port) {
-        return true;
+        if(this.isConnected) {
+            try {
+                this.initiateConnection(port);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
     }
 
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")
@@ -66,4 +82,17 @@ public final class WifiDirectPeer extends WifiDirectBase {
 
     @Override
     public void onDestroy() {}
+
+    private Selector initSelector() throws IOException {
+        return SelectorProvider.provider().openSelector();
+    }
+
+    private SocketChannel initiateConnection(int port) throws IOException {
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+
+        socketChannel.connect(new InetSocketAddress(this.GroupOwnerHostAddress(), port));
+
+        return socketChannel;
+    }
 }

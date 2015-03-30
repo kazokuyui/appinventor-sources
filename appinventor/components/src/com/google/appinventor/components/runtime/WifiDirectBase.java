@@ -3,6 +3,7 @@ package com.google.appinventor.components.runtime;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.*;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
@@ -124,26 +125,26 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
     }
 
     @SimpleProperty(description = "Returns true if WiFi Direct connection is available",
-            category = PropertyCategory.BEHAVIOR)
+                    category = PropertyCategory.BEHAVIOR)
     public boolean Available() {
         return this.isAvailable;
     }
 
     @SimpleProperty(description = "Returns true if this device is connected to any other device",
-            category = PropertyCategory.BEHAVIOR)
+                    category = PropertyCategory.BEHAVIOR)
     public boolean Connected() {
         return this.isConnected;
     }
 
     @SimpleProperty(description = "Returns the representation of this device with the format" +
-            "[deviceName] deviceMACAddress",
-            category = PropertyCategory.BEHAVIOR)
+                    "[deviceName] deviceMACAddress",
+                    category = PropertyCategory.BEHAVIOR)
     public String Device() {
         return WifiDirectUtil.deviceToString(this.mDevice);
     }
 
     @SimpleProperty(description = "Returns name of the device",
-            category = PropertyCategory.BEHAVIOR)
+                    category = PropertyCategory.BEHAVIOR)
     public String DeviceName() {
         if(this.mDevice != null) {
             return this.mDevice.deviceName;
@@ -152,7 +153,7 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
     }
 
     @SimpleProperty(description = "Returns MAC address of the device",
-            category = PropertyCategory.BEHAVIOR)
+                    category = PropertyCategory.BEHAVIOR)
     public String DeviceMACAddress() {
         if(this.mDevice != null) {
             return this.mDevice.deviceAddress;
@@ -161,7 +162,7 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
     }
 
     @SimpleProperty(description = "Returns the IP address of the device",
-            category = PropertyCategory.BEHAVIOR)
+                    category = PropertyCategory.BEHAVIOR)
     public String DeviceIPAddress() {
         if(this.isConnected) {
             return this.IPAddress;
@@ -170,13 +171,13 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
     }
 
     @SimpleProperty(description = "Returns status of the device",
-            category = PropertyCategory.BEHAVIOR)
+                    category = PropertyCategory.BEHAVIOR)
     public String DeviceStatus() {
         return WifiDirectUtil.getDeviceStatus(this.mDevice);
     }
 
     @SimpleProperty(description = "All the available devices near you",
-            category = PropertyCategory.BEHAVIOR)
+                    category = PropertyCategory.BEHAVIOR)
     public List<String> AvailableDevices() {
         List<String> availableDevices = new ArrayList<String>();
         if(this.availableDevices != null) {
@@ -188,7 +189,7 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
     }
 
     @SimpleProperty(description = "All the available peers in the network",
-            category = PropertyCategory.BEHAVIOR)
+                    category = PropertyCategory.BEHAVIOR)
     public List<String> AvailablePeers() {
         List<String> peers = new ArrayList<String>();
         for(WifiP2pDevice peer: this.mPeers) {
@@ -203,6 +204,12 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
             return this.mConnectionInfo.isGroupOwner;
         }
         return false;
+    }
+
+    @SimpleProperty(description = "Returns true if this device is WiFi-enabled")
+    public boolean IsWifiEnabled() {
+        WifiManager wifiManager = (WifiManager) this.form.getSystemService(Context.WIFI_SERVICE);
+        return wifiManager.isWifiEnabled();
     }
 
     @SimpleFunction(description = "Scan all devices nearby")

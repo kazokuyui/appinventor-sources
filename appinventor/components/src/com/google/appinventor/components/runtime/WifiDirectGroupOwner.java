@@ -1,7 +1,6 @@
 package com.google.appinventor.components.runtime;
 
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pManager;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.YaVersion;
@@ -9,13 +8,19 @@ import com.google.appinventor.components.runtime.util.AsynchUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * @author nmcalabroso@up.edu.ph (neil)
@@ -27,18 +32,21 @@ import java.util.Collection;
         category = ComponentCategory.CONNECTIVITY,
         nonVisible = true,
         iconName = "images/wifiDirect.png")
+
 @SimpleObject
 public class WifiDirectGroupOwner extends WifiDirectBase{
 
-    private ServerSocket serverSocket;
+    private ServerSocketChannel serverSocketChannel;
+    private Selector selector;
+    private InetAddress hostAddress;
     private int serverPort;
-    private Collection<Socket> clients;
+    private ByteBuffer readBuffer;
     private boolean isAccepting;
 
     protected WifiDirectGroupOwner(ComponentContainer container) {
         super(container, "WifiDirectGroupOwner");
+        this.hostAddress = null;
         this.serverPort = WifiDirectUtil.defaultServerPort;
-        this.clients = new ArrayList<Socket>();
         this.isAccepting = false;
     }
 
@@ -58,7 +66,7 @@ public class WifiDirectGroupOwner extends WifiDirectBase{
     }
 
     @SimpleProperty
-    public boolean AcceptingConnection() {
+    public boolean IsAccepting() {
         return this.isAccepting;
     }
 
@@ -70,23 +78,31 @@ public class WifiDirectGroupOwner extends WifiDirectBase{
             @Override
             public void run() {
                 try {
-                    ServerSocket socket = new ServerSocket(WifiDirectGroupOwner.this.serverPort);
-                    WifiDirectGroupOwner.this.setServerSocket(socket);
+                    selector = WifiDirectGroupOwner.this.initializeSelector();
+                    readBuffer = ByteBuffer.allocate(WifiDirectUtil.defaultBufferSize);
 
-                    while (isAccepting) {
-                        Socket client = socket.accept();
-                        addPeer(client);
-                        ConnectionAccepted(client.getRemoteSocketAddress().toString());
-                        DataInputStream in = new DataInputStream(client.getInputStream());
-                        DataOutputStream out = new DataOutputStream(client.getOutputStream());
-                        if(in.readUTF().equals(WifiDirectUtil.REGISTER_TO_NETWORK)) {
-                            out.writeUTF(WifiDirectUtil.REGISTRATION_ACCEPTED);
+                    while(WifiDirectGroupOwner.this.isAccepting) {
+                        selector.select();
+                        Iterator selectedKeys = selector.selectedKeys().iterator();
+
+                        while(selectedKeys.hasNext()) {
+                            SelectionKey key = (SelectionKey) selectedKeys.next();
+                            selectedKeys.remove();
+
+                            if(key.isValid()) {
+                                if(key.isAcceptable()) {
+                                    WifiDirectGroupOwner.this.accept(key);
+                                }
+                                else if(key.isReadable()) {
+                                    WifiDirectGroupOwner.this.read(key);
+                                }
+                            }
                         }
                     }
                 } catch (IOException e) {
                     wifiDirectError("AcceptConnection",
-                            ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
-                            e.getMessage());
+                                    ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                                    e.getMessage());
                 }
             }
         });
@@ -96,18 +112,7 @@ public class WifiDirectGroupOwner extends WifiDirectBase{
     @SimpleFunction(description = "Stop accepting new connection")
     public void StopAcceptingConnection(){
         this.isAccepting = false;
-        try {
-            this.serverSocket.close();
-        } catch (IOException e) {
-            wifiDirectError("AcceptConnection",
-                    ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
-                    e.getMessage());
-        }
-    }
-
-    @SimpleFunction(description = "Request list of peers")
-    public void RequestPeers(){
-        this.manager.requestGroupInfo(this.channel, (WifiP2pManager.GroupInfoListener) this.receiver);
+        // close here
     }
 
     @SimpleFunction(description = "Broadcasts the latest list of peers")
@@ -130,15 +135,64 @@ public class WifiDirectGroupOwner extends WifiDirectBase{
 
     }
 
-    public void addPeer(Socket peer) {
-        this.clients.add(peer);
+    public void accept(SelectionKey key) {
+        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+        SocketChannel socketChannel;
+
+        try {
+            socketChannel = serverSocketChannel.accept();
+            Socket socket = socketChannel.socket();
+            socketChannel.configureBlocking(false);
+
+            socketChannel.register(this.selector, SelectionKey.OP_READ);
+            WifiDirectGroupOwner.this.ConnectionAccepted(socket.getInetAddress().getHostAddress());
+        } catch (IOException e) {
+            wifiDirectError("accept",
+                            ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                            e.getMessage());
+        }
     }
 
-    public boolean removePeer(Socket peer) {
-        return this.clients.remove(peer);
+    public void read(SelectionKey key) throws IOException {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+        this.readBuffer.clear();
+        int numRead;
+
+        try {
+            numRead = socketChannel.read(this.readBuffer);
+        } catch (IOException e) {
+            key.cancel();
+            socketChannel.close();
+            return;
+        }
+
+        if(numRead == -1) {
+            key.channel().close();
+            key.cancel();
+            return;
+        }
+
+        //this.worker.processData(this, socketChannel, this.readBuffer.array(), numRead);
     }
 
-    public void setServerSocket(ServerSocket socket) {
-        this.serverSocket = socket;
+    public Selector initializeSelector() {
+        Selector socketSelector = null;
+        try {
+            socketSelector = SelectorProvider.provider().openSelector();
+            this.serverSocketChannel = ServerSocketChannel.open();
+            this.serverSocketChannel.configureBlocking(false);
+
+            InetSocketAddress isa = new InetSocketAddress(this.hostAddress, this.serverPort);
+            this.serverSocketChannel.socket().bind(isa);
+
+            serverSocketChannel.register(socketSelector, SelectionKey.OP_ACCEPT);
+            return socketSelector;
+        } catch (IOException e) {
+            wifiDirectError("initializeSelector",
+                            ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                            e.getMessage());
+        }
+
+        return socketSelector;
     }
 }

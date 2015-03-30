@@ -2276,6 +2276,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String IsGroupOwnerProperties();
 
+  @DefaultMessage("IsWifiEnabled")
+  @Description("")
+  String IsWifiEnabledProperties();
+
   @DefaultMessage("ApiKey")
   @Description("")
   String ApiKeyProperties();
