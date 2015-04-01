@@ -25,7 +25,6 @@ public class WifiDirectWorker implements Runnable {
         WifiDirectDataEvent dataEvent;
 
         while(true) {
-            // Wait for data to become available
             synchronized(queue) {
                 while(queue.isEmpty()) {
                     try {
@@ -36,7 +35,6 @@ public class WifiDirectWorker implements Runnable {
                 dataEvent = (WifiDirectDataEvent) queue.remove(0);
             }
 
-            // Return to sender
             dataEvent.server.send(dataEvent.socket, dataEvent.data);
         }
     }

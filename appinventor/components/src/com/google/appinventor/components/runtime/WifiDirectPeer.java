@@ -33,8 +33,6 @@ import java.nio.channels.spi.SelectorProvider;
 public final class WifiDirectPeer extends WifiDirectBase {
 
     private WifiP2pDevice groupOwner;
-    private Socket controlSocket;
-    private Socket clientSocket;
 
     public WifiDirectPeer(ComponentContainer container) {
         super(container, "WifiDirectClient");
@@ -83,10 +81,6 @@ public final class WifiDirectPeer extends WifiDirectBase {
 
     @Override
     public void onDestroy() {}
-
-    private Selector initSelector() throws IOException {
-        return SelectorProvider.provider().openSelector();
-    }
 
     private SocketChannel initiateConnection(int port) throws IOException {
         SocketChannel socketChannel = SocketChannel.open();

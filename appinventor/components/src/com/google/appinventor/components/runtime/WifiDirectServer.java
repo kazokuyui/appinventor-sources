@@ -106,6 +106,7 @@ public class WifiDirectServer implements Runnable {
         socketChannel.configureBlocking(false);
 
         socketChannel.register(this.selector, SelectionKey.OP_READ);
+        this.go.ConnectionAccepted(socket.getInetAddress().getHostAddress());
     }
 
     private void read(SelectionKey key) throws IOException {
@@ -127,7 +128,6 @@ public class WifiDirectServer implements Runnable {
             return;
         }
 
-        // Hand the data off to our worker thread
         this.worker.processData(this, socketChannel, this.readBuffer.array(), numRead);
     }
 
