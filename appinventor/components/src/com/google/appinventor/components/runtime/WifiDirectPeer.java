@@ -60,7 +60,7 @@ public final class WifiDirectPeer extends WifiDirectBase {
     }
 
     @SimpleFunction(description = "Registers device to the group owner")
-    public boolean RegisterDevice(int port) {
+    public void RegisterDevice(int port) {
         if(this.isConnected) {
             try {
                 this.initiateConnection(port);
@@ -68,14 +68,15 @@ public final class WifiDirectPeer extends WifiDirectBase {
                 e.printStackTrace();
             }
         }
-        return false;
     }
 
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")
     public void RequestPeers() {}
 
     @SimpleFunction(description = "Send data to a particular device")
-    public void SendData(String address, int port) {}
+    public void SendData(String address, int port) {
+
+    }
 
     @Override
     public void onDelete() {}

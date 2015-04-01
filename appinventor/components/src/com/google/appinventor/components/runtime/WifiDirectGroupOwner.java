@@ -36,16 +36,11 @@ import java.util.Iterator;
 @SimpleObject
 public class WifiDirectGroupOwner extends WifiDirectBase{
 
-    private ServerSocketChannel serverSocketChannel;
-    private Selector selector;
-    private InetAddress hostAddress;
     private int serverPort;
-    private ByteBuffer readBuffer;
     private boolean isAccepting;
 
     protected WifiDirectGroupOwner(ComponentContainer container) {
         super(container, "WifiDirectGroupOwner");
-        this.hostAddress = null;
         this.serverPort = WifiDirectUtil.defaultServerPort;
         this.isAccepting = false;
     }
@@ -73,40 +68,16 @@ public class WifiDirectGroupOwner extends WifiDirectBase{
     @SimpleFunction(description = "Start accepting new connections")
     public void AcceptConnection() {
         this.isAccepting = true;
+        WifiDirectWorker worker = new WifiDirectWorker();
 
-        AsynchUtil.runAsynchronously(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    selector = WifiDirectGroupOwner.this.initializeSelector();
-                    readBuffer = ByteBuffer.allocate(WifiDirectUtil.defaultBufferSize);
-
-                    while(WifiDirectGroupOwner.this.isAccepting) {
-                        selector.select();
-                        Iterator selectedKeys = selector.selectedKeys().iterator();
-
-                        while(selectedKeys.hasNext()) {
-                            SelectionKey key = (SelectionKey) selectedKeys.next();
-                            selectedKeys.remove();
-
-                            if(key.isValid()) {
-                                if(key.isAcceptable()) {
-                                    WifiDirectGroupOwner.this.accept(key);
-                                }
-                                else if(key.isReadable()) {
-                                    WifiDirectGroupOwner.this.read(key);
-                                }
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    wifiDirectError("AcceptConnection",
-                                    ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
-                                    e.getMessage());
-                }
-            }
-        });
-
+        try {
+            AsynchUtil.runAsynchronously(worker);
+            AsynchUtil.runAsynchronously(new WifiDirectServer(this, null, this.serverPort, worker));
+        } catch (IOException e) {
+            wifiDirectError("AcceptConnection",
+                            ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                            e.getMessage());
+        }
     }
 
     @SimpleFunction(description = "Stop accepting new connection")
@@ -133,66 +104,5 @@ public class WifiDirectGroupOwner extends WifiDirectBase{
     @Override
     public void onDestroy() {
 
-    }
-
-    public void accept(SelectionKey key) {
-        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-        SocketChannel socketChannel;
-
-        try {
-            socketChannel = serverSocketChannel.accept();
-            Socket socket = socketChannel.socket();
-            socketChannel.configureBlocking(false);
-
-            socketChannel.register(this.selector, SelectionKey.OP_READ);
-            WifiDirectGroupOwner.this.ConnectionAccepted(socket.getInetAddress().getHostAddress());
-        } catch (IOException e) {
-            wifiDirectError("accept",
-                            ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
-                            e.getMessage());
-        }
-    }
-
-    public void read(SelectionKey key) throws IOException {
-        SocketChannel socketChannel = (SocketChannel) key.channel();
-        this.readBuffer.clear();
-        int numRead;
-
-        try {
-            numRead = socketChannel.read(this.readBuffer);
-        } catch (IOException e) {
-            key.cancel();
-            socketChannel.close();
-            return;
-        }
-
-        if(numRead == -1) {
-            key.channel().close();
-            key.cancel();
-            return;
-        }
-
-        //this.worker.processData(this, socketChannel, this.readBuffer.array(), numRead);
-    }
-
-    public Selector initializeSelector() {
-        Selector socketSelector = null;
-        try {
-            socketSelector = SelectorProvider.provider().openSelector();
-            this.serverSocketChannel = ServerSocketChannel.open();
-            this.serverSocketChannel.configureBlocking(false);
-
-            InetSocketAddress isa = new InetSocketAddress(this.hostAddress, this.serverPort);
-            this.serverSocketChannel.socket().bind(isa);
-
-            serverSocketChannel.register(socketSelector, SelectionKey.OP_ACCEPT);
-            return socketSelector;
-        } catch (IOException e) {
-            wifiDirectError("initializeSelector",
-                            ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
-                            e.getMessage());
-        }
-
-        return socketSelector;
     }
 }
