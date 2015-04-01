@@ -39,7 +39,7 @@ public class WifiDirectGroupOwner extends WifiDirectBase{
     private int serverPort;
     private boolean isAccepting;
 
-    protected WifiDirectGroupOwner(ComponentContainer container) {
+    public WifiDirectGroupOwner(ComponentContainer container) {
         super(container, "WifiDirectGroupOwner");
         this.serverPort = WifiDirectUtil.defaultServerPort;
         this.isAccepting = false;
