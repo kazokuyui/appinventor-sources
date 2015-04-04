@@ -6,20 +6,30 @@ import android.content.IntentFilter;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.*;
 import com.google.appinventor.components.annotations.*;
+import com.google.appinventor.components.common.ComponentCategory;
+import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static android.net.wifi.p2p.WifiP2pManager.Channel;
-
 /**
- * An abstract base class for WifiDirectGroupOwner and WifiDirectClient
+ * A peer-to-peer(p2p) component via WiFi Direct
  *
  * @author nmcalabroso@up.edu.ph (neil)
  * @author erbunao@up.edu.ph (earle)
  */
+
+@DesignerComponent(version = YaVersion.WIFIDIRECTPEER_COMPONENT_VERSION,
+                   description = "Non-visible component that provides network functions in a P2P network via WiFi Direct",
+                   designerHelpDescription = "Wifi Direct Peer-to-Peer Component",
+                   category = ComponentCategory.CONNECTIVITY,
+                   nonVisible = true,
+                   iconName = "images/wifiDirect.png")
 @SimpleObject
 @UsesPermissions(permissionNames = "android.permission.ACCESS_WIFI_STATE, " +
         "android.permission.CHANGE_WIFI_STATE, " +
@@ -29,13 +39,12 @@ import static android.net.wifi.p2p.WifiP2pManager.Channel;
         "android.permission.INTERNET, " +
         "android.permission.READ_PHONE_STATE")
 
-public abstract class WifiDirectBase extends AndroidNonvisibleComponent
-        implements Component, OnDestroyListener, Deleteable {
+public class WifiDirectP2P extends AndroidNonvisibleComponent implements Component, OnDestroyListener, Deleteable {
 
     protected String TAG;
 
     protected WifiP2pManager manager;
-    protected Channel channel;
+    protected WifiP2pManager.Channel channel;
     protected BroadcastReceiver receiver;
 
     protected IntentFilter intentFilter;
@@ -49,12 +58,15 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
     protected boolean isAvailable;
     protected boolean isConnected;
 
-    protected WifiDirectBase(ComponentContainer container, String TAG) {
-        this(container.$form(), TAG);
+    private int serverPort;
+    private boolean isAccepting;
+
+    public WifiDirectP2P(ComponentContainer container) {
+        this(container.$form(), "WifiDirectP2P");
         form.registerForOnDestroy(this);
     }
 
-    private WifiDirectBase(Form form, String TAG) {
+    private WifiDirectP2P(Form form, String TAG) {
         super(form);
         this.TAG = TAG;
         this.manager = (WifiP2pManager) form.getSystemService(Context.WIFI_P2P_SERVICE);
@@ -98,7 +110,7 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
         EventDispatcher.dispatchEvent(this, "ConnectionInfoAvailable");
     }
 
-    @SimpleEvent(description = "Connection information is available")
+    @SimpleEvent(description = "Group information is available")
     public void GroupInfoAvailable() {
         EventDispatcher.dispatchEvent(this, "GroupInfoAvailable");
     }
@@ -116,6 +128,14 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
     @SimpleEvent(description = "Channel is disconnected")
     public void ChannelDisconnected() {
         EventDispatcher.dispatchEvent(this, "ChannelDisconnected");
+    }
+
+    @SimpleEvent(description = "Device is now registered to the group owner")
+    public void DeviceRegistered(String IPAddress) {}
+
+    @SimpleEvent(description = "Connection of a peer is accepted")
+    public void ConnectionAccepted(String deviceName) {
+        EventDispatcher.dispatchEvent(this, "ConnectionAccepted", deviceName);
     }
 
     @SimpleEvent(description = "For testing purposes only")
@@ -198,7 +218,8 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
         return peers;
     }
 
-    @SimpleProperty(description = "Returns true if this device is a Group Owner")
+    @SimpleProperty(description = "Returns true if this device is a Group Owner",
+                    category = PropertyCategory.BEHAVIOR)
     public boolean IsGroupOwner() {
         if(this.mConnectionInfo != null) {
             return this.mConnectionInfo.isGroupOwner;
@@ -206,10 +227,38 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
         return false;
     }
 
-    @SimpleProperty(description = "Returns true if this device is WiFi-enabled")
+    @SimpleProperty(description = "Returns true if this device is WiFi-enabled",
+                    category = PropertyCategory.BEHAVIOR)
     public boolean IsWifiEnabled() {
         WifiManager wifiManager = (WifiManager) this.form.getSystemService(Context.WIFI_SERVICE);
         return wifiManager.isWifiEnabled();
+    }
+
+    @SimpleProperty(description = "Returns the Group owner's host address",
+                    category = PropertyCategory.BEHAVIOR)
+    public String GroupOwnerHostAddress() {
+        if(this.mConnectionInfo != null) {
+            return this.mConnectionInfo.groupOwnerAddress.getHostAddress();
+        }
+        return WifiDirectUtil.defaultDeviceIPAddress;
+    }
+
+    @SimpleProperty(description = "Server port",
+                    category = PropertyCategory.BEHAVIOR)
+    public int ServerPort() {
+        return this.serverPort;
+    }
+
+    @SimpleProperty(description = "Sets the server port",
+                    category = PropertyCategory.BEHAVIOR)
+    public void ServerPort(int serverPort) {
+        this.serverPort = serverPort;
+    }
+
+    @SimpleProperty(description = "Returns true if this device is accepting a connection",
+                    category = PropertyCategory.BEHAVIOR)
+    public boolean IsAccepting() {
+        return this.isAccepting;
     }
 
     @SimpleFunction(description = "Scan all devices nearby")
@@ -260,6 +309,30 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
 
     }
 
+    @SimpleFunction(description = "Registers device to the group owner")
+    public void RegisterDevice(int port) {
+        if(this.isConnected) {
+            try {
+                this.initiateConnection(port);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @SimpleFunction(description = "Requests the list of peers addresses from the group owner")
+    public void RequestPeers() {}
+
+    @Override
+    public void onDelete() {
+
+    }
+
+    @Override
+    public void onDestroy() {
+
+    }
+
     public void setAvailableDevices(WifiP2pDeviceList wifiP2pDeviceList) {
         this.availableDevices = wifiP2pDeviceList.getDeviceList();
     }
@@ -286,6 +359,15 @@ public abstract class WifiDirectBase extends AndroidNonvisibleComponent
 
     public void setIsConnected(boolean isConnected) {
         this.isConnected = isConnected;
+    }
+
+    private SocketChannel initiateConnection(int port) throws IOException {
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+
+        socketChannel.connect(new InetSocketAddress(this.GroupOwnerHostAddress(), port));
+
+        return socketChannel;
     }
 
     protected void wifiDirectError(String functionName, int errorCode, Object... args) {

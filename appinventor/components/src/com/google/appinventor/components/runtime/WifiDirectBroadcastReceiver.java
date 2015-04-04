@@ -18,10 +18,9 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
 
     private WifiP2pManager manager;
     private Channel channel;
-    private WifiDirectBase main;
+    private WifiDirectP2P main;
 
-    public WifiDirectBroadcastReceiver(WifiP2pManager manager, Channel channel,
-                                       WifiDirectBase main) {
+    public WifiDirectBroadcastReceiver(WifiP2pManager manager, Channel channel, WifiDirectP2P main) {
         super();
         this.manager = manager;
         this.channel = channel;
