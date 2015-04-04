@@ -8,6 +8,8 @@ import android.net.wifi.p2p.*;
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.components.runtime.util.AsynchUtil;
+import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
 import java.io.IOException;
@@ -256,6 +258,17 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         return this.isAccepting;
     }
 
+    @SimpleProperty(description = "Server port",
+                    category = PropertyCategory.BEHAVIOR)
+    public int ServerPort() {
+        return this.serverPort;
+    }
+
+    @SimpleProperty
+    public void ServerPort(int serverPort) {
+        this.serverPort = serverPort;
+    }
+
     @SimpleFunction(description = "Scan all devices nearby")
     public void DiscoverDevices() {
         this.manager.discoverPeers(this.channel, new WifiP2pManager.ActionListener() {
@@ -321,7 +334,31 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")
-    public void RequestPeers() {}
+    public void RequestPeers() {
+        this.manager.requestPeers(this.channel, (WifiP2pManager.PeerListListener) this.receiver);
+    }
+
+    @SimpleFunction(description = "Start accepting new connections")
+    public void StartGOServer() {
+        if(this.IsGroupOwner()) {
+            this.isAccepting = true;
+            WifiDirectWorker worker = new WifiDirectWorker();
+
+            try {
+                AsynchUtil.runAsynchronously(worker);
+                AsynchUtil.runAsynchronously(new WifiDirectServer(this, null, this.serverPort, worker));
+            } catch (IOException e) {
+                wifiDirectError("AcceptConnection",
+                                ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                                e.getMessage());
+            }
+        }
+    }
+
+    @SimpleFunction(description = "Stop accepting new connection")
+    public void StopGOServer(){
+        this.isAccepting = false;
+    }
 
     @Override
     public void onDelete() {

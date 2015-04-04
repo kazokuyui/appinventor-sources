@@ -4211,9 +4211,13 @@ public interface OdeMessages extends Messages {
   @Description("")
   String SendTextMethods();
 
-  @DefaultMessage("AcceptConnection")
+  @DefaultMessage("StartGOServer")
   @Description("")
-  String AcceptConnectionMethods();
+  String StartGOServerMethods();
+
+  @DefaultMessage("StopGOServer")
+  @Description("")
+  String StopGOServerMethods();
 
   @DefaultMessage("AcceptConnectionWithUUID")
   @Description("")
