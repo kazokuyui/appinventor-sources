@@ -56,7 +56,8 @@ public class TranslationComponentProperty {
     map.put("DeviceIPAddress", MESSAGES.DeviceIPAddressProperties());
     map.put("DeviceStatus", MESSAGES.DeviceStatusProperties());
     map.put("GroupOwner", MESSAGES.GroupOwnerProperties());
-    map.put("GroupOwnerHostAddress", MESSAGES.GroupOwnerHostAddressProperties());
+    map.put("GroupName", MESSAGES.GroupNameProperties());
+    map.put("GroupOwnerAddress", MESSAGES.GroupOwnerAddressProperties());
     map.put("IsGroupOwner", MESSAGES.IsGroupOwnerProperties());
     map.put("IsWifiEnabled", MESSAGES.IsWifiEnabledProperties());
     map.put("ServerPort", MESSAGES.ServerPortProperties());

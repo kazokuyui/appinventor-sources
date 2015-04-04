@@ -2268,9 +2268,13 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GroupOwnerProperties();
 
-  @DefaultMessage("GroupOwnerHostAddress")
+  @DefaultMessage("GroupName")
   @Description("")
-  String GroupOwnerHostAddressProperties();
+  String GroupNameProperties();
+
+  @DefaultMessage("GroupOwnerAddress")
+  @Description("")
+  String GroupOwnerAddressProperties();
 
   @DefaultMessage("IsGroupOwner")
   @Description("")

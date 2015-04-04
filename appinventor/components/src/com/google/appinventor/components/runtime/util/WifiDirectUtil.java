@@ -17,6 +17,7 @@ public class WifiDirectUtil {
     public static final String defaultDeviceName = "MyDevice";
     public static final String defaultDeviceMACAddress = "Unknown";
     public static final String defaultDeviceIPAddress = "0.0.0.0";
+    public static final String defaultGroupName = "MyP2PGroup";
     public static final int defaultServerPort = 4545;
     public static final int defaultBufferSize = 1024;
     public static final int defaultTimeOut = 1000;
