@@ -22,7 +22,7 @@ import java.util.*;
  */
 
 public class WifiDirectServer implements Runnable {
-    private WifiDirectGroupOwner go;
+    private WifiDirectP2P go;
     private InetAddress hostAddress;
     private int port;
     private ServerSocketChannel serverChannel;
@@ -32,7 +32,7 @@ public class WifiDirectServer implements Runnable {
     private List pendingChanges = new LinkedList();
     private Map pendingData = new HashMap();
 
-    public WifiDirectServer(WifiDirectGroupOwner go, InetAddress hostAddress, int port, WifiDirectWorker worker) throws IOException {
+    public WifiDirectServer(WifiDirectP2P go, InetAddress hostAddress, int port, WifiDirectWorker worker) throws IOException {
         this.go = go;
         this.hostAddress = hostAddress;
         this.port = port;
