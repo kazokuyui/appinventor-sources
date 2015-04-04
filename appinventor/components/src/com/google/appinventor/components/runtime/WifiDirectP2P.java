@@ -53,6 +53,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private Collection<WifiP2pDevice> availableDevices;
     private Collection<WifiP2pDevice> mPeers;
     private WifiP2pDevice mDevice;
+    private WifiP2pDevice mGroupOwner;
     private WifiP2pGroup mGroup;
     private WifiP2pInfo mConnectionInfo;
 
@@ -226,12 +227,22 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         return peers;
     }
 
-    @SimpleProperty(description = "Returns the name of the group")
+    @SimpleProperty(description = "Returns the name of the group",
+                    category = PropertyCategory.BEHAVIOR)
     public String GroupName() {
         if(this.mGroup != null) {
             return this.mGroup.getNetworkName();
         }
         return WifiDirectUtil.defaultGroupName;
+    }
+
+    @SimpleProperty(description = "Returns the Group owner's device representation",
+                    category = PropertyCategory.BEHAVIOR)
+    public String GroupOwner() {
+        if(this.mGroupOwner != null) {
+            return WifiDirectUtil.deviceToString(this.mGroupOwner);
+        }
+        return WifiDirectUtil.defaultDeviceName;
     }
 
     @SimpleProperty(description = "Returns the Group owner's host address",
@@ -246,10 +257,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleProperty(description = "Returns true if this device is a Group Owner",
                     category = PropertyCategory.BEHAVIOR)
     public boolean IsGroupOwner() {
-        if(this.mConnectionInfo != null) {
-            return this.mConnectionInfo.isGroupOwner;
-        }
-        return false;
+        return this.mConnectionInfo != null && this.mConnectionInfo.isGroupOwner;
     }
 
     @SimpleProperty(description = "Returns true if this device is accepting a connection",
@@ -335,7 +343,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")
     public void RequestPeers() {
-        this.manager.requestPeers(this.channel, (WifiP2pManager.PeerListListener) this.receiver);
     }
 
     @SimpleFunction(description = "Start accepting new connections")
@@ -388,6 +395,11 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     public void setP2PGroup(WifiP2pGroup mGroup) {
         this.mGroup = mGroup;
+        this.setP2PGroupOwner(this.mGroup.getOwner());
+    }
+
+    public void setP2PGroupOwner(WifiP2pDevice go) {
+        this.mGroupOwner = go;
     }
 
     public void setIsAvailable(boolean isAvailable) {
