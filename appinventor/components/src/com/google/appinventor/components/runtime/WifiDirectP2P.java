@@ -50,6 +50,11 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver;
 
+    private WifiDirectServer server;
+    private WifiDirectClient client;
+    private WifiDirectWorker serverWorker;
+    private WifiDirectWorker clientWorker;
+
     private Collection<WifiP2pDevice> availableDevices;
     private Collection<WifiP2pDevice> mPeers;
     private WifiP2pDevice mDevice;
@@ -62,6 +67,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private boolean isAvailable;
     private boolean isConnected;
     private boolean isAccepting;
+    private boolean isRegistered;
 
     public WifiDirectP2P(ComponentContainer container) {
         this(container.$form(), "WifiDirectP2P");
@@ -87,6 +93,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.isAvailable = false;
         this.isConnected = false;
         this.isAccepting = false;
+        this.isRegistered = false;
     }
 
     @SimpleEvent(description = "List of nearby devices is available")
@@ -269,6 +276,12 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         return this.isAccepting;
     }
 
+    @SimpleProperty(description = "Returns true if this device is already registered to the Group Owner",
+                    category = PropertyCategory.BEHAVIOR)
+    public boolean IsRegistered() {
+        return this.isRegistered;
+    }
+
     @SimpleProperty(description = "Server port",
                     category = PropertyCategory.BEHAVIOR)
     public int ServerPort() {
@@ -336,11 +349,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleFunction(description = "Registers device to the group owner")
     public void RegisterDevice(int port) {
         if(this.isConnected) {
-            try {
-                this.initiateConnection(port);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            return;
         }
     }
 
@@ -352,13 +361,14 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     public void StartGOServer() {
         if(this.IsGroupOwner()) {
             this.isAccepting = true;
-            WifiDirectWorker worker = new WifiDirectWorker();
 
             try {
-                AsynchUtil.runAsynchronously(worker);
-                AsynchUtil.runAsynchronously(new WifiDirectServer(this, null, this.serverPort, worker));
+                this.serverWorker = new WifiDirectWorker();
+                this.server = new WifiDirectServer(this, null, this.serverPort, this.serverWorker);
+                AsynchUtil.runAsynchronously(this.serverWorker);
+                AsynchUtil.runAsynchronously(this.server);
             } catch (IOException e) {
-                wifiDirectError("AcceptConnection",
+                wifiDirectError("StartGOServer",
                                 ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
                                 e.getMessage());
             }
@@ -373,12 +383,12 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleFunction(description = "Start the client")
     public void StartClient() {
         try {
-            WifiDirectClient client = new WifiDirectClient(InetAddress.getByName("google.com"), 80);
+            this.client = new WifiDirectClient(this, InetAddress.getByName("google.com"), 80);
             WifiDirectRSPHandler handler = new WifiDirectRSPHandler();
 
-            AsynchUtil.runAsynchronously(client);
+            AsynchUtil.runAsynchronously(this.client);
 
-            client.send("GET / HTTP/1.0\r\n\r\n".getBytes(), handler);
+            this.client.send("GET / HTTP/1.0\r\n\r\n".getBytes(), handler);
             handler.waitForResponse();
         } catch (Exception e) {
             wifiDirectError("StartClient",
@@ -435,13 +445,15 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.isConnected = isConnected;
     }
 
-    private SocketChannel initiateConnection(int port) throws IOException {
+    public void setIsRegistered(boolean isRegistered) {
+        this.isRegistered = isRegistered;
+    }
+
+    private void initiateConnection(int port) throws IOException {
         SocketChannel socketChannel = SocketChannel.open();
         socketChannel.configureBlocking(false);
 
         socketChannel.connect(new InetSocketAddress(this.GroupOwnerAddress(), port));
-
-        return socketChannel;
     }
 
     private void wifiDirectError(String functionName, int errorCode, Object... args) {

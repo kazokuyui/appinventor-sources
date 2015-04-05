@@ -87,6 +87,7 @@ public class TranslationComponentProperty {
     map.put("InvitedInstances", MESSAGES.InvitedInstancesProperties());
     map.put("IsAccepting", MESSAGES.IsAcceptingProperties());
     map.put("IsConnected", MESSAGES.IsConnectedProperties());
+    map.put("IsRegistered", MESSAGES.IsRegisteredProperties());
     map.put("IsPlaying", MESSAGES.IsPlayingProperties());
     map.put("JoinedInstances", MESSAGES.JoinedInstancesProperties());
     map.put("Latitude", MESSAGES.LatitudeProperties());

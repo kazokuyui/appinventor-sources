@@ -2972,6 +2972,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String IsConnectedProperties();
 
+  @DefaultMessage("IsRegistered")
+  @Description("")
+  String IsRegisteredProperties();
+
   @DefaultMessage("IsPlaying")
   @Description("")
   String IsPlayingProperties();

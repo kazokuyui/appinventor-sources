@@ -13,16 +13,20 @@ import java.nio.channels.spi.SelectorProvider;
 import java.util.*;
 
 public class WifiDirectClient implements Runnable {
+
+    private WifiDirectP2P peer;
+
     private InetAddress hostAddress;
     private int port;
     private Selector selector;
 
     private ByteBuffer readBuffer = ByteBuffer.allocate(WifiDirectUtil.defaultBufferSize);
-    private final List pendingChanges = new LinkedList();
+    private final List<WifiDirectChangeRequest> pendingChanges = new LinkedList<WifiDirectChangeRequest>();
     private final Map<SocketChannel, List<ByteBuffer>> pendingData = new HashMap<SocketChannel, List<ByteBuffer>>();
     private Map<SocketChannel, WifiDirectRSPHandler> rspHandlers = Collections.synchronizedMap(new HashMap<SocketChannel, WifiDirectRSPHandler>());
 
-    public WifiDirectClient(InetAddress hostAddress, int port) throws IOException {
+    public WifiDirectClient(WifiDirectP2P peer, InetAddress hostAddress, int port) throws IOException {
+        this.peer = peer;
         this.hostAddress = hostAddress;
         this.port = port;
         this.selector = this.initSelector();
@@ -46,18 +50,17 @@ public class WifiDirectClient implements Runnable {
     }
 
     public void run() {
-        while (true) {
+        while (this.peer.IsRegistered()) {
             try {
                 synchronized (this.pendingChanges) {
-                    for (Object pendingChange : this.pendingChanges) {
-                        WifiDirectChangeRequest change = (WifiDirectChangeRequest) pendingChange;
-                        switch (change.type) {
+                    for (WifiDirectChangeRequest pendingChange : this.pendingChanges) {
+                        switch (pendingChange.type) {
                             case WifiDirectChangeRequest.CHANGEOPS:
-                                SelectionKey key = change.socket.keyFor(this.selector);
-                                key.interestOps(change.ops);
+                                SelectionKey key = pendingChange.socket.keyFor(this.selector);
+                                key.interestOps(pendingChange.ops);
                                 break;
                             case WifiDirectChangeRequest.REGISTER:
-                                change.socket.register(this.selector, change.ops);
+                                pendingChange.socket.register(this.selector, pendingChange.ops);
                                 break;
                         }
                     }
@@ -152,7 +155,6 @@ public class WifiDirectClient implements Runnable {
         try {
             socketChannel.finishConnect();
         } catch (IOException e) {
-            System.out.println(e);
             key.cancel();
             return;
         }
