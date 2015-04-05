@@ -62,11 +62,11 @@ public class WifiDirectServer implements Runnable {
             try {
                 synchronized (this.pendingChanges) {
                     for (WifiDirectChangeRequest pendingChange : this.pendingChanges) {
-                        WifiDirectChangeRequest change = pendingChange;
-                        switch (change.type) {
+                        switch (pendingChange.type) {
                             case WifiDirectChangeRequest.CHANGEOPS:
-                                SelectionKey key = change.socket.keyFor(this.selector);
-                                key.interestOps(change.ops);
+                                SelectionKey key = pendingChange.socket.keyFor(this.selector);
+                                key.interestOps(pendingChange.ops);
+                                break;
                         }
                     }
                     this.pendingChanges.clear();

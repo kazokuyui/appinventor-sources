@@ -24,6 +24,7 @@ public class WifiDirectClient implements Runnable {
     private final List<WifiDirectChangeRequest> pendingChanges = new LinkedList<WifiDirectChangeRequest>();
     private final Map<SocketChannel, List<ByteBuffer>> pendingData = new HashMap<SocketChannel, List<ByteBuffer>>();
     private Map<SocketChannel, WifiDirectRSPHandler> rspHandlers = Collections.synchronizedMap(new HashMap<SocketChannel, WifiDirectRSPHandler>());
+    private SocketChannel socket;
 
     public WifiDirectClient(WifiDirectP2P peer, InetAddress hostAddress, int port) throws IOException {
         this.peer = peer;
@@ -33,15 +34,15 @@ public class WifiDirectClient implements Runnable {
     }
 
     public void send(byte[] data, WifiDirectRSPHandler handler) throws IOException {
-        SocketChannel socket = this.initiateConnection();
+        this.socket = this.initiateConnection();
 
-        this.rspHandlers.put(socket, handler);
+        this.rspHandlers.put(this.socket, handler);
 
         synchronized (this.pendingData) {
-            List<ByteBuffer> queue = this.pendingData.get(socket);
+            List<ByteBuffer> queue = this.pendingData.get(this.socket);
             if (queue == null) {
                 queue = new ArrayList<ByteBuffer>();
-                this.pendingData.put(socket, queue);
+                this.pendingData.put(this.socket, queue);
             }
             queue.add(ByteBuffer.wrap(data));
         }
@@ -80,6 +81,7 @@ public class WifiDirectClient implements Runnable {
 
                     if (key.isConnectable()) {
                         this.finishConnection(key);
+                        this.peer.DeviceRegistered(this.socket.getRemoteAddress().toString());
                     } else if (key.isReadable()) {
                         this.read(key);
                     } else if (key.isWritable()) {

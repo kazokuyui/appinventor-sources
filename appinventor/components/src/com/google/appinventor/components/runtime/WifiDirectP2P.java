@@ -13,7 +13,6 @@ import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -53,7 +52,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private WifiDirectServer server;
     private WifiDirectClient client;
     private WifiDirectWorker serverWorker;
-    private WifiDirectWorker clientWorker;
 
     private Collection<WifiP2pDevice> availableDevices;
     private Collection<WifiP2pDevice> mPeers;
@@ -337,8 +335,10 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     @SimpleFunction(description = "Send data to a particular device")
-    public void SendData(String address, int port) {
+    public void SendData(String address, int port, String msg) {
+        if(this.isRegistered) {
 
+        }
     }
 
     @SimpleFunction(description = "Receive data from a particular device")
@@ -380,15 +380,15 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.isAccepting = false;
     }
 
-    @SimpleFunction(description = "Start the client")
-    public void StartClient() {
+    @SimpleFunction(description = "Start the client and connect to the Group Owner in the specified port")
+    public void StartClient(int port) {
         try {
-            this.client = new WifiDirectClient(this, InetAddress.getByName("google.com"), 80);
             WifiDirectRSPHandler handler = new WifiDirectRSPHandler();
+            this.client = new WifiDirectClient(this, this.mConnectionInfo.groupOwnerAddress, port);
 
             AsynchUtil.runAsynchronously(this.client);
 
-            this.client.send("GET / HTTP/1.0\r\n\r\n".getBytes(), handler);
+            this.client.send("Hello World".getBytes(), handler);
             handler.waitForResponse();
         } catch (Exception e) {
             wifiDirectError("StartClient",
@@ -447,13 +447,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     public void setIsRegistered(boolean isRegistered) {
         this.isRegistered = isRegistered;
-    }
-
-    private void initiateConnection(int port) throws IOException {
-        SocketChannel socketChannel = SocketChannel.open();
-        socketChannel.configureBlocking(false);
-
-        socketChannel.connect(new InetSocketAddress(this.GroupOwnerAddress(), port));
     }
 
     private void wifiDirectError(String functionName, int errorCode, Object... args) {
