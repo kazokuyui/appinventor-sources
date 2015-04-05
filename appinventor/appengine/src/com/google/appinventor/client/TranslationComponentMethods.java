@@ -79,6 +79,8 @@ public class TranslationComponentMethods {
     map.put("SendText", MESSAGES.SendTextMethods());
     map.put("StartGOServer", MESSAGES.StartGOServerMethods());
     map.put("StopGOServer", MESSAGES.StopGOServerMethods());
+    map.put("StartClient", MESSAGES.StartClientMethods());
+    map.put("StopClient", MESSAGES.StopClientMethods());
     map.put("AcceptConnectionWithUUID", MESSAGES.AcceptConnectionWithUUIDMethods());
     map.put("BytesAvailableToReceive", MESSAGES.BytesAvailableToReceiveMethods());
     map.put("StopAccepting", MESSAGES.StopAcceptingMethods());

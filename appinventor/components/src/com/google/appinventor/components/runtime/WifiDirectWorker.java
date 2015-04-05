@@ -10,7 +10,7 @@ import java.util.List;
  * @author erbunao@up.edu.ph (earle)
  */
 public class WifiDirectWorker implements Runnable {
-    private List queue = new LinkedList();
+    private final List<WifiDirectDataEvent> queue = new LinkedList<WifiDirectDataEvent>();
 
     public void processData(WifiDirectServer server, SocketChannel socket, byte[] data, int count) {
         byte[] dataCopy = new byte[count];
@@ -29,10 +29,11 @@ public class WifiDirectWorker implements Runnable {
                 while(queue.isEmpty()) {
                     try {
                         queue.wait();
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException ignored) {
+
                     }
                 }
-                dataEvent = (WifiDirectDataEvent) queue.remove(0);
+                dataEvent = queue.remove(0);
             }
 
             dataEvent.server.send(dataEvent.socket, dataEvent.data);

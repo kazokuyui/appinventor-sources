@@ -13,6 +13,7 @@ import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -49,7 +50,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver;
 
-    private IntentFilter intentFilter;
     private Collection<WifiP2pDevice> availableDevices;
     private Collection<WifiP2pDevice> mPeers;
     private WifiP2pDevice mDevice;
@@ -58,11 +58,10 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private WifiP2pInfo mConnectionInfo;
 
     private String IPAddress;
+    private int serverPort;
     private boolean isAvailable;
     private boolean isConnected;
     private boolean isAccepting;
-
-    private int serverPort;
 
     public WifiDirectP2P(ComponentContainer container) {
         this(container.$form(), "WifiDirectP2P");
@@ -76,16 +75,18 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.channel = this.manager.initialize(form, form.getMainLooper(), null);
         this.receiver = new WifiDirectBroadcastReceiver(this.manager, this.channel, this);
 
-        this.intentFilter = new IntentFilter();
-        this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        this.intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        form.registerReceiver(this.receiver, this.intentFilter);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        form.registerReceiver(this.receiver, intentFilter);
 
+        this.IPAddress = WifiDirectUtil.defaultDeviceIPAddress;
+        this.serverPort = WifiDirectUtil.defaultServerPort;
         this.isAvailable = false;
         this.isConnected = false;
-        this.IPAddress = WifiDirectUtil.defaultDeviceIPAddress;
+        this.isAccepting = false;
     }
 
     @SimpleEvent(description = "List of nearby devices is available")
@@ -119,7 +120,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     @SimpleEvent(description = "Device is now registered to the group owner")
-    public void DeviceRegistered(String IPAddress) {}
+    public void DeviceRegistered(String IPAddress) {
+        EventDispatcher.dispatchEvent(this, "DeviceRegistered", IPAddress);
+    }
 
     @SimpleEvent(description = "Connection of a peer is accepted")
     public void ConnectionAccepted(String deviceName) {
@@ -365,6 +368,28 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleFunction(description = "Stop accepting new connection")
     public void StopGOServer(){
         this.isAccepting = false;
+    }
+
+    @SimpleFunction(description = "Start the client")
+    public void StartClient() {
+        try {
+            WifiDirectClient client = new WifiDirectClient(InetAddress.getByName("google.com"), 80);
+            WifiDirectRSPHandler handler = new WifiDirectRSPHandler();
+
+            AsynchUtil.runAsynchronously(client);
+
+            client.send("GET / HTTP/1.0\r\n\r\n".getBytes(), handler);
+            handler.waitForResponse();
+        } catch (Exception e) {
+            wifiDirectError("StartClient",
+                            ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                            e.getMessage());
+        }
+    }
+
+    @SimpleFunction(description = "Stop the client")
+    public void StopClient() {
+
     }
 
     @Override

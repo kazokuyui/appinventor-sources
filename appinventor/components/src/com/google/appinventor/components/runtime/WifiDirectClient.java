@@ -5,68 +5,60 @@ import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.*;
 
-/**
- * Java NIO Server for WifiDirect Component
- *
- * @author nmcalabroso@up.edu.ph (neil)
- * @author erbunao@up.edu.ph (earle)
- */
-
-public class WifiDirectServer implements Runnable {
-    private WifiDirectP2P go;
+public class WifiDirectClient implements Runnable {
     private InetAddress hostAddress;
     private int port;
-    private ServerSocketChannel serverChannel;
     private Selector selector;
-    private ByteBuffer readBuffer = ByteBuffer.allocate(WifiDirectUtil.defaultBufferSize);
-    private WifiDirectWorker worker;
-    private final List<WifiDirectChangeRequest> pendingChanges = new LinkedList<WifiDirectChangeRequest>();
-    private final Map<SocketChannel, List<ByteBuffer>> pendingData = new HashMap<SocketChannel, List<ByteBuffer>>();
 
-    public WifiDirectServer(WifiDirectP2P go, InetAddress hostAddress, int port, WifiDirectWorker worker) throws IOException {
-        this.go = go;
+    private ByteBuffer readBuffer = ByteBuffer.allocate(WifiDirectUtil.defaultBufferSize);
+    private final List pendingChanges = new LinkedList();
+    private final Map<SocketChannel, List<ByteBuffer>> pendingData = new HashMap<SocketChannel, List<ByteBuffer>>();
+    private Map<SocketChannel, WifiDirectRSPHandler> rspHandlers = Collections.synchronizedMap(new HashMap<SocketChannel, WifiDirectRSPHandler>());
+
+    public WifiDirectClient(InetAddress hostAddress, int port) throws IOException {
         this.hostAddress = hostAddress;
         this.port = port;
         this.selector = this.initSelector();
-        this.worker = worker;
     }
 
-    public void send(SocketChannel socket, byte[] data) {
-        synchronized (this.pendingChanges) {
-            this.pendingChanges.add(new WifiDirectChangeRequest(socket, WifiDirectChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
+    public void send(byte[] data, WifiDirectRSPHandler handler) throws IOException {
+        SocketChannel socket = this.initiateConnection();
 
-            synchronized (this.pendingData) {
-                List<ByteBuffer> queue = this.pendingData.get(socket);
-                if (queue == null) {
-                    queue = new ArrayList<ByteBuffer>();
-                    this.pendingData.put(socket, queue);
-                }
-                queue.add(ByteBuffer.wrap(data));
+        this.rspHandlers.put(socket, handler);
+
+        synchronized (this.pendingData) {
+            List<ByteBuffer> queue = this.pendingData.get(socket);
+            if (queue == null) {
+                queue = new ArrayList<ByteBuffer>();
+                this.pendingData.put(socket, queue);
             }
+            queue.add(ByteBuffer.wrap(data));
         }
 
         this.selector.wakeup();
     }
 
     public void run() {
-        while (this.go.IsAccepting()) {
+        while (true) {
             try {
                 synchronized (this.pendingChanges) {
-                    for (WifiDirectChangeRequest pendingChange : this.pendingChanges) {
-                        WifiDirectChangeRequest change = pendingChange;
+                    for (Object pendingChange : this.pendingChanges) {
+                        WifiDirectChangeRequest change = (WifiDirectChangeRequest) pendingChange;
                         switch (change.type) {
                             case WifiDirectChangeRequest.CHANGEOPS:
                                 SelectionKey key = change.socket.keyFor(this.selector);
                                 key.interestOps(change.ops);
+                                break;
+                            case WifiDirectChangeRequest.REGISTER:
+                                change.socket.register(this.selector, change.ops);
+                                break;
                         }
                     }
                     this.pendingChanges.clear();
@@ -83,8 +75,8 @@ public class WifiDirectServer implements Runnable {
                         continue;
                     }
 
-                    if (key.isAcceptable()) {
-                        this.accept(key);
+                    if (key.isConnectable()) {
+                        this.finishConnection(key);
                     } else if (key.isReadable()) {
                         this.read(key);
                     } else if (key.isWritable()) {
@@ -97,22 +89,11 @@ public class WifiDirectServer implements Runnable {
         }
     }
 
-    private void accept(SelectionKey key) throws IOException {
-        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-
-        SocketChannel socketChannel = serverSocketChannel.accept();
-        Socket socket = socketChannel.socket();
-        socketChannel.configureBlocking(false);
-
-        socketChannel.register(this.selector, SelectionKey.OP_READ);
-        this.go.ConnectionAccepted(socket.getInetAddress().getHostAddress());
-    }
-
     private void read(SelectionKey key) throws IOException {
         SocketChannel socketChannel = (SocketChannel) key.channel();
         this.readBuffer.clear();
-
         int numRead;
+
         try {
             numRead = socketChannel.read(this.readBuffer);
         } catch (IOException e) {
@@ -127,7 +108,19 @@ public class WifiDirectServer implements Runnable {
             return;
         }
 
-        this.worker.processData(this, socketChannel, this.readBuffer.array(), numRead);
+        this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
+    }
+
+    private void handleResponse(SocketChannel socketChannel, byte[] data, int numRead) throws IOException {
+        byte[] rspData = new byte[numRead];
+        System.arraycopy(data, 0, rspData, 0, numRead);
+
+        WifiDirectRSPHandler handler = this.rspHandlers.get(socketChannel);
+
+        if (handler.handleResponse(rspData)) {
+            socketChannel.close();
+            socketChannel.keyFor(this.selector).cancel();
+        }
     }
 
     private void write(SelectionKey key) throws IOException {
@@ -139,29 +132,48 @@ public class WifiDirectServer implements Runnable {
             while (!queue.isEmpty()) {
                 ByteBuffer buf = queue.get(0);
                 socketChannel.write(buf);
+
                 if (buf.remaining() > 0) {
                     break;
                 }
+
                 queue.remove(0);
             }
 
             if (queue.isEmpty()) {
-
                 key.interestOps(SelectionKey.OP_READ);
             }
         }
     }
 
+    private void finishConnection(SelectionKey key) throws IOException {
+        SocketChannel socketChannel = (SocketChannel) key.channel();
+
+        try {
+            socketChannel.finishConnect();
+        } catch (IOException e) {
+            System.out.println(e);
+            key.cancel();
+            return;
+        }
+
+        key.interestOps(SelectionKey.OP_WRITE);
+    }
+
+    private SocketChannel initiateConnection() throws IOException {
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+
+        socketChannel.connect(new InetSocketAddress(this.hostAddress, this.port));
+
+        synchronized(this.pendingChanges) {
+            this.pendingChanges.add(new WifiDirectChangeRequest(socketChannel, WifiDirectChangeRequest.REGISTER, SelectionKey.OP_CONNECT));
+        }
+
+        return socketChannel;
+    }
+
     private Selector initSelector() throws IOException {
-        Selector socketSelector = SelectorProvider.provider().openSelector();
-        this.serverChannel = ServerSocketChannel.open();
-        serverChannel.configureBlocking(false);
-
-        InetSocketAddress isa = new InetSocketAddress(this.hostAddress, this.port);
-        serverChannel.socket().bind(isa);
-
-        serverChannel.register(socketSelector, SelectionKey.OP_ACCEPT);
-
-        return socketSelector;
+        return SelectorProvider.provider().openSelector();
     }
 }
