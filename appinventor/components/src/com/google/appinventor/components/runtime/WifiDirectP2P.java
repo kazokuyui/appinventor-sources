@@ -262,6 +262,16 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         return WifiDirectUtil.defaultDeviceIPAddress;
     }
 
+    @SimpleProperty(description = "Returns the passphrase for the group",
+                    category = PropertyCategory.BEHAVIOR)
+    public String GroupPassphrase() {
+        if(this.mGroup != null) {
+            return this.mGroup.getPassphrase();
+        }
+        return "Unknown";
+    }
+
+
     @SimpleProperty(description = "Returns true if this device is a Group Owner",
                     category = PropertyCategory.BEHAVIOR)
     public boolean IsGroupOwner() {

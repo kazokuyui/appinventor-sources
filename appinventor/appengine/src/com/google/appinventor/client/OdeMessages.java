@@ -2276,6 +2276,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GroupOwnerAddressProperties();
 
+  @DefaultMessage("GroupPassphrase")
+  @Description("")
+  String GroupPassphraseProperties();
+
   @DefaultMessage("IsGroupOwner")
   @Description("")
   String IsGroupOwnerProperties();
@@ -3454,6 +3458,7 @@ public interface OdeMessages extends Messages {
   String sensorPortLetterParams();
 
   @DefaultMessage("rxDataLength")
+
   @Description("")
   String rxDataLengthParams();
 
