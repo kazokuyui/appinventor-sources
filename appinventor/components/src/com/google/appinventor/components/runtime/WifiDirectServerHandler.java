@@ -14,6 +14,18 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 @ChannelHandler.Sharable
 public class WifiDirectServerHandler extends ChannelInboundHandlerAdapter {
 
+    private WifiDirectServer server;
+
+    public WifiDirectServerHandler(WifiDirectServer server) {
+        super();
+        this.server = server;
+    }
+
+    @Override
+    public void channelActive(final ChannelHandlerContext context) {
+        this.server.accept(context.channel().remoteAddress().toString());
+    }
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ctx.write(msg);

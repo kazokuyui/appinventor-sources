@@ -13,8 +13,6 @@ import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,15 +30,15 @@ import java.util.List;
                    category = ComponentCategory.CONNECTIVITY,
                    nonVisible = true,
                    iconName = "images/wifiDirect.png")
-@SimpleObject
+@UsesLibraries(libraries = "netty.jar")
 @UsesPermissions(permissionNames = "android.permission.ACCESS_WIFI_STATE, " +
-        "android.permission.CHANGE_WIFI_STATE, " +
-        "android.permission.CHANGE_NETWORK_STATE, " +
-        "android.permission.ACCESS_NETWORK_STATE, " +
-        "android.permission.CHANGE_WIFI_MULTICAST_STATE, " +
-        "android.permission.INTERNET, " +
-        "android.permission.READ_PHONE_STATE")
-
+                 "android.permission.CHANGE_WIFI_STATE, " +
+                 "android.permission.CHANGE_NETWORK_STATE, " +
+                 "android.permission.ACCESS_NETWORK_STATE, " +
+                 "android.permission.CHANGE_WIFI_MULTICAST_STATE, " +
+                 "android.permission.INTERNET, " +
+                 "android.permission.READ_PHONE_STATE")
+@SimpleObject
 public class WifiDirectP2P extends AndroidNonvisibleComponent implements Component, OnDestroyListener, Deleteable {
 
     public String TAG;
@@ -269,7 +267,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         }
         return "Unknown";
     }
-
 
     @SimpleProperty(description = "Returns true if this device is a Group Owner",
                     category = PropertyCategory.BEHAVIOR)

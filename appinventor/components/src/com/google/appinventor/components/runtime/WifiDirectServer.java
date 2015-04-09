@@ -6,22 +6,11 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.spi.SelectorProvider;
-import java.util.*;
-
 /**
  * Java NIO Server for WifiDirect Component
  *
@@ -34,9 +23,8 @@ public class WifiDirectServer implements Runnable {
     private InetAddress hostAddress;
     private int port;
 
-    EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-    EventLoopGroup workerGroup = new NioEventLoopGroup();
-
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     public WifiDirectServer(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
@@ -47,19 +35,7 @@ public class WifiDirectServer implements Runnable {
     }
 
     public void run() {
-        SslContext sslCtx = null;
-
-        if (WifiDirectUtil.SSL) {
-            try {
-                SelfSignedCertificate ssc = new SelfSignedCertificate();
-                sslCtx = SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        } else {
-            sslCtx = null;
-        }
+        SslContext sslCtx = this.initiateSsl();
 
         try {
             ServerBootstrap b = new ServerBootstrap();
@@ -76,7 +52,7 @@ public class WifiDirectServer implements Runnable {
                                 p.addLast(finalSslCtx.newHandler(ch.alloc()));
                             }
 
-                            p.addLast(new WifiDirectServerHandler());
+                            p.addLast(new WifiDirectServerHandler(WifiDirectServer.this));
                         }
                     });
 
@@ -94,8 +70,26 @@ public class WifiDirectServer implements Runnable {
         }
     }
 
+    public void accept(String client) {
+        this.p2p.ConnectionAccepted(client);
+    }
+
     public void stop() {
         this.bossGroup.shutdownGracefully();
         this.workerGroup.shutdownGracefully();
+    }
+
+    public SslContext initiateSsl() {
+        if (WifiDirectUtil.SSL) {
+            try {
+                SelfSignedCertificate ssc = new SelfSignedCertificate();
+                return SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        return null;
     }
 }

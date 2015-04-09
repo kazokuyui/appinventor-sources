@@ -16,16 +16,19 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  */
 
 public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
+    private WifiDirectClient client;
     private final ByteBuf firstMessage;
 
     /**
      * Creates a client-side handler.
      */
-    public WifiDirectClientHandler() {
-        firstMessage = Unpooled.buffer(WifiDirectUtil.defaultBufferSize);
+    public WifiDirectClientHandler(WifiDirectClient client) {
+        super();
+        this.client = client;
+        this.firstMessage = Unpooled.buffer(WifiDirectUtil.defaultBufferSize);
 
-        for (int i = 0; i < firstMessage.capacity(); i ++) {
-            firstMessage.writeByte((byte) i);
+        for (int i = 0; i < this.firstMessage.capacity(); i ++) {
+            this.firstMessage.writeByte((byte) i);
         }
     }
 

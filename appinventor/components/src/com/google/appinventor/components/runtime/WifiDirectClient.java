@@ -11,12 +11,9 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.*;
 
 public class WifiDirectClient implements Runnable {
-
     private WifiDirectP2P p2p;
-
     private InetAddress hostAddress;
     private int port;
     private EventLoopGroup group;
@@ -30,41 +27,34 @@ public class WifiDirectClient implements Runnable {
 
     public void run() {
         // Configure SSL.git
-        SslContext sslCtx = null;
-
-        if (WifiDirectUtil.SSL) {
-            try {
-                sslCtx = SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            sslCtx = null;
-        }
+        SslContext sslCtx = this.initiateSsl();
 
         try {
             Bootstrap b = new Bootstrap();
             final SslContext finalSslCtx = sslCtx;
-            b.group(this.group)
-                    .channel(NioSocketChannel.class)
-                    .option(ChannelOption.TCP_NODELAY, true)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
-                            ChannelPipeline p = ch.pipeline();
-                            if (finalSslCtx != null) {
-                                p.addLast(finalSslCtx.newHandler(ch.alloc(),
-                                                                 WifiDirectClient.this.hostAddress.getHostAddress(),
-                                                                 WifiDirectClient.this.port));
-                            }
-                            p.addLast(new WifiDirectClientHandler());
-                        }
-                    });
+            b.group(this.group);
+            b.channel(NioSocketChannel.class);
+            b.option(ChannelOption.TCP_NODELAY, true);
+            b.handler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                public void initChannel(SocketChannel ch) throws Exception {
+                    ChannelPipeline p = ch.pipeline();
+
+                    if (finalSslCtx != null) {
+                        p.addLast(finalSslCtx.newHandler(ch.alloc(),
+                                                         WifiDirectClient.this.hostAddress.getHostAddress(),
+                                                         WifiDirectClient.this.port));
+                    }
+
+                    p.addLast(new WifiDirectClientHandler(WifiDirectClient.this));
+                }
+            });
 
             // Start the client.
-            ChannelFuture f = b.connect(WifiDirectClient.this.hostAddress.getHostAddress(),
-                                        WifiDirectClient.this.port).sync();
+            ChannelFuture f = b.connect(this.hostAddress.getHostAddress(),
+                                        this.port).sync();
+
+            this.p2p.Trigger(this.hostAddress.getHostAddress()+" : "+this.port);
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
@@ -78,5 +68,19 @@ public class WifiDirectClient implements Runnable {
 
     public void stop() {
         this.group.shutdownGracefully();
+    }
+
+    public SslContext initiateSsl() {
+        if (WifiDirectUtil.SSL) {
+            try {
+                return SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        return null;
     }
 }

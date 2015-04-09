@@ -125,6 +125,7 @@
         <pathelement location="${lib.dir}/twitter/twitter4j-core-3.0.5.jar" />
         <pathelement location="${lib.dir}/twitter/twitter4j-media-support-3.0.5.jar" />
         <pathelement location="${lib.dir}/fusiontables/fusiontables.jar" />
+        <pathelement location="${lib.dir}/netty/netty-all-4.1.0.Beta4.jar" />
         <pathelement location="${lib.dir}/oauth/google-api-client-1.10.3-beta.jar" />
         <pathelement location="${lib.dir}/oauth/google-api-client-android2-1.10.3-beta.jar" />
         <pathelement location="${lib.dir}/oauth/google-http-client-1.10.3-beta.jar" />
@@ -194,7 +195,7 @@
     <sequential>
       <mkdir dir="@{apt-classdir}" />
       <!-- Look at all source files to determine whether the target is up-to-date. This will catch
-      changes to the Java files in the annotations, common, runtime, and scripts packages and .txt
+      changes to the Jav/home/neil/Projects/appinventor-sourcesa files in the annotations, common, runtime, and scripts packages and .txt
       files in scripts/templates. -->
       <uptodate property="target.uptodate" targetfile="@{apt-target}">
         <srcfiles dir="${src.dir}" includes="${components.pkg}/**/*"/>
@@ -222,6 +223,7 @@
           <pathelement location="${lib.dir}/gson/gson-2.1.jar" />
           <pathelement location="${lib.dir}/json/json.jar" />
           <pathelement location="${lib.dir}/kawa/kawa-1.11-modified.jar" />
+          <pathelement location="${lib.dir}/netty/netty-all-4.1.0.Beta4.jar" />
           <pathelement location="${lib.dir}/acra/acra-4.4.0.jar" />
           <pathelement location="${lib.dir}/twitter/twitter4j-core-3.0.5.jar" />
           <pathelement location="${lib.dir}/twitter/twitter4j-media-support-3.0.5.jar" />
@@ -281,7 +283,7 @@
     <ai.javac5 destdir="${AnnotationProcessors-class.dir}">
       <include name="${components.pkg}/scripts/*.java" />
       <classpath>
-        <pathelement location="${local.build.dir}/ComponentProcessingLib.jar"/>
+        <pathelement location="${local.build.dwir}/ComponentProcessingLib.jar"/>
         <pathelement location="${local.build.dir}/HtmlEntities.jar" />
         <pathelement location="${public.build.dir}/CommonConstants.jar" />
         <pathelement location="${build.dir}/common/CommonUtils.jar" />
