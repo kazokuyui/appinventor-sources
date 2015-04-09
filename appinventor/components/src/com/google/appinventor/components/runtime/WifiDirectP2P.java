@@ -51,7 +51,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     private WifiDirectServer server;
     private WifiDirectClient client;
-    private WifiDirectWorker serverWorker;
 
     private Collection<WifiP2pDevice> availableDevices;
     private Collection<WifiP2pDevice> mPeers;
@@ -370,13 +369,10 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleFunction(description = "Start accepting new connections")
     public void StartGOServer() {
         if(this.IsGroupOwner()) {
-            this.isAccepting = true;
-
             try {
-                this.serverWorker = new WifiDirectWorker();
-                this.server = new WifiDirectServer(this, null, this.serverPort, this.serverWorker);
-                AsynchUtil.runAsynchronously(this.serverWorker);
+                this.server = new WifiDirectServer(this, null, this.serverPort);
                 AsynchUtil.runAsynchronously(this.server);
+                this.isAccepting = true;
             } catch (IOException e) {
                 wifiDirectError("StartGOServer",
                                 ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
@@ -387,19 +383,17 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     @SimpleFunction(description = "Stop accepting new connection")
     public void StopGOServer(){
-        this.isAccepting = false;
+        if(this.isAccepting) {
+            this.server.stop();
+            this.isAccepting = false;
+        }
     }
 
     @SimpleFunction(description = "Start the client and connect to the Group Owner in the specified port")
     public void StartClient(int port) {
         try {
-            WifiDirectRSPHandler handler = new WifiDirectRSPHandler();
             this.client = new WifiDirectClient(this, this.mConnectionInfo.groupOwnerAddress, port);
-
             AsynchUtil.runAsynchronously(this.client);
-
-            this.client.send("Hello World".getBytes(), handler);
-            handler.waitForResponse();
         } catch (Exception e) {
             wifiDirectError("StartClient",
                             ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
@@ -409,7 +403,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     @SimpleFunction(description = "Stop the client")
     public void StopClient() {
-
+        if(this.isRegistered) {
+            this.client.stop();
+        }
     }
 
     @Override

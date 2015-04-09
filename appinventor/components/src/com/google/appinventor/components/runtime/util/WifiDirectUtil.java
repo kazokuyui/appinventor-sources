@@ -10,9 +10,6 @@ import android.net.wifi.p2p.WifiP2pDevice;
  * @author erbunao@up.edu.ph (earle)
  */
 public class WifiDirectUtil {
-    public static final String REGISTER_TO_NETWORK = "registerToNetwork";
-    public static final String REGISTRATION_ACCEPTED = "registrationAccepted";
-    public static final String REGISTRATION_INITIATED = "registrationInitiated";
 
     public static final String defaultDeviceName = "MyDevice";
     public static final String defaultDeviceMACAddress = "Unknown";
@@ -20,7 +17,8 @@ public class WifiDirectUtil {
     public static final String defaultGroupName = "MyP2PGroup";
     public static final int defaultServerPort = 4545;
     public static final int defaultBufferSize = 1024;
-    public static final int defaultTimeOut = 1000;
+    public static final int defaultTimeOut = 3000;
+    public static boolean SSL = System.getProperty("ssl") != null;
 
     public static String deviceToString(WifiP2pDevice device) {
         return "[" + device.deviceName + "] " + device.deviceAddress;

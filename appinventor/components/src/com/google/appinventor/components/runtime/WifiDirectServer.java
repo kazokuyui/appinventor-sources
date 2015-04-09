@@ -1,6 +1,15 @@
 package com.google.appinventor.components.runtime;
 
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -10,7 +19,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.*;
 
@@ -22,146 +30,72 @@ import java.util.*;
  */
 
 public class WifiDirectServer implements Runnable {
-    private WifiDirectP2P go;
+    private WifiDirectP2P p2p;
     private InetAddress hostAddress;
     private int port;
-    private ServerSocketChannel serverChannel;
-    private Selector selector;
-    private ByteBuffer readBuffer = ByteBuffer.allocate(WifiDirectUtil.defaultBufferSize);
-    private WifiDirectWorker worker;
-    private final List<WifiDirectChangeRequest> pendingChanges = new LinkedList<WifiDirectChangeRequest>();
-    private final Map<SocketChannel, List<ByteBuffer>> pendingData = new HashMap<SocketChannel, List<ByteBuffer>>();
 
-    public WifiDirectServer(WifiDirectP2P go, InetAddress hostAddress, int port, WifiDirectWorker worker) throws IOException {
-        this.go = go;
+    EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+    EventLoopGroup workerGroup = new NioEventLoopGroup();
+
+
+    public WifiDirectServer(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
+        this.p2p = p2p;
         this.hostAddress = hostAddress;
         this.port = port;
-        this.selector = this.initSelector();
-        this.worker = worker;
-    }
-
-    public void send(SocketChannel socket, byte[] data) {
-        synchronized (this.pendingChanges) {
-            this.pendingChanges.add(new WifiDirectChangeRequest(socket, WifiDirectChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
-
-            synchronized (this.pendingData) {
-                List<ByteBuffer> queue = this.pendingData.get(socket);
-                if (queue == null) {
-                    queue = new ArrayList<ByteBuffer>();
-                    this.pendingData.put(socket, queue);
-                }
-                queue.add(ByteBuffer.wrap(data));
-            }
-        }
-
-        this.selector.wakeup();
+        this.bossGroup = new NioEventLoopGroup(1);
+        this.workerGroup = new NioEventLoopGroup();
     }
 
     public void run() {
-        while (this.go.IsAccepting()) {
+        SslContext sslCtx = null;
+
+        if (WifiDirectUtil.SSL) {
             try {
-                synchronized (this.pendingChanges) {
-                    for (WifiDirectChangeRequest pendingChange : this.pendingChanges) {
-                        switch (pendingChange.type) {
-                            case WifiDirectChangeRequest.CHANGEOPS:
-                                SelectionKey key = pendingChange.socket.keyFor(this.selector);
-                                key.interestOps(pendingChange.ops);
-                                break;
-                        }
-                    }
-                    this.pendingChanges.clear();
-                }
-
-                this.selector.select();
-
-                Iterator<SelectionKey> selectedKeys = this.selector.selectedKeys().iterator();
-                while (selectedKeys.hasNext()) {
-                    SelectionKey key = selectedKeys.next();
-                    selectedKeys.remove();
-
-                    if (!key.isValid()) {
-                        continue;
-                    }
-
-                    if (key.isAcceptable()) {
-                        this.accept(key);
-                    } else if (key.isReadable()) {
-                        this.read(key);
-                    } else if (key.isWritable()) {
-                        this.write(key);
-                    }
-                }
+                SelfSignedCertificate ssc = new SelfSignedCertificate();
+                sslCtx = SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+        } else {
+            sslCtx = null;
         }
-    }
 
-    private void accept(SelectionKey key) throws IOException {
-        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-
-        SocketChannel socketChannel = serverSocketChannel.accept();
-        Socket socket = socketChannel.socket();
-        socketChannel.configureBlocking(false);
-
-        socketChannel.register(this.selector, SelectionKey.OP_READ);
-        this.go.ConnectionAccepted(socket.getInetAddress().getHostAddress());
-    }
-
-    private void read(SelectionKey key) throws IOException {
-        SocketChannel socketChannel = (SocketChannel) key.channel();
-        this.readBuffer.clear();
-
-        int numRead;
         try {
-            numRead = socketChannel.read(this.readBuffer);
-        } catch (IOException e) {
-            key.cancel();
-            socketChannel.close();
-            return;
-        }
+            ServerBootstrap b = new ServerBootstrap();
+            final SslContext finalSslCtx = sslCtx;
+            b.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 100)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        public void initChannel(SocketChannel ch) throws Exception {
+                            ChannelPipeline p = ch.pipeline();
 
-        if (numRead == -1) {
-            key.channel().close();
-            key.cancel();
-            return;
-        }
+                            if (finalSslCtx != null) {
+                                p.addLast(finalSslCtx.newHandler(ch.alloc()));
+                            }
 
-        this.worker.processData(this, socketChannel, this.readBuffer.array(), numRead);
-    }
+                            p.addLast(new WifiDirectServerHandler());
+                        }
+                    });
 
-    private void write(SelectionKey key) throws IOException {
-        SocketChannel socketChannel = (SocketChannel) key.channel();
+            // Start the server.
+            ChannelFuture f = b.bind(this.hostAddress, this.port).sync();
 
-        synchronized (this.pendingData) {
-            List<ByteBuffer> queue = this.pendingData.get(socketChannel);
-
-            while (!queue.isEmpty()) {
-                ByteBuffer buf = queue.get(0);
-                socketChannel.write(buf);
-                if (buf.remaining() > 0) {
-                    break;
-                }
-                queue.remove(0);
-            }
-
-            if (queue.isEmpty()) {
-
-                key.interestOps(SelectionKey.OP_READ);
-            }
+            // Wait until the server socket is closed.
+            f.channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            // Shut down all event loops to terminate all threads.
+            this.bossGroup.shutdownGracefully();
+            this.workerGroup.shutdownGracefully();
         }
     }
 
-    private Selector initSelector() throws IOException {
-        Selector socketSelector = SelectorProvider.provider().openSelector();
-        this.serverChannel = ServerSocketChannel.open();
-        serverChannel.configureBlocking(false);
-
-        InetSocketAddress isa = new InetSocketAddress(this.hostAddress, this.port);
-        serverChannel.socket().bind(isa);
-
-        serverChannel.register(socketSelector, SelectionKey.OP_ACCEPT);
-
-        return socketSelector;
+    public void stop() {
+        this.bossGroup.shutdownGracefully();
+        this.workerGroup.shutdownGracefully();
     }
 }
