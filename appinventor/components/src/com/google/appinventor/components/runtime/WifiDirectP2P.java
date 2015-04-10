@@ -30,7 +30,7 @@ import java.util.List;
                    category = ComponentCategory.CONNECTIVITY,
                    nonVisible = true,
                    iconName = "images/wifiDirect.png")
-@UsesLibraries(libraries = "netty.jar")
+@UsesLibraries(libraries = "netty.jar,json.jar,gson-2.1.jar")
 @UsesPermissions(permissionNames = "android.permission.ACCESS_WIFI_STATE, " +
                  "android.permission.CHANGE_WIFI_STATE, " +
                  "android.permission.CHANGE_NETWORK_STATE, " +
@@ -47,7 +47,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver;
 
-    private WifiDirectServer server;
+    private WifiDirectGroupServer groupServer;
     private WifiDirectClient client;
 
     private Collection<WifiP2pDevice> availableDevices;
@@ -367,8 +367,8 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     public void StartGOServer() {
         if(this.IsGroupOwner()) {
             try {
-                this.server = new WifiDirectServer(this, null, this.serverPort);
-                AsynchUtil.runAsynchronously(this.server);
+                this.groupServer = new WifiDirectGroupServer(this, null, WifiDirectUtil.defaultGroupServerPort);
+                AsynchUtil.runAsynchronously(this.groupServer);
                 this.isAccepting = true;
             } catch (IOException e) {
                 wifiDirectError("StartGOServer",
@@ -381,7 +381,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleFunction(description = "Stop accepting new connection")
     public void StopGOServer(){
         if(this.isAccepting) {
-            this.server.stop();
+            this.groupServer.stop();
             this.isAccepting = false;
         }
     }

@@ -1,8 +1,8 @@
 package com.google.appinventor.components.runtime;
 
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import com.google.appinventor.components.runtime.util.WifiDirectUtil;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.*;
 
 /**
  * Java NIO Server Handler for WifiDirect Component
@@ -12,11 +12,11 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  */
 
 @ChannelHandler.Sharable
-public class WifiDirectServerHandler extends ChannelInboundHandlerAdapter {
+public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
-    private WifiDirectServer server;
+    private WifiDirectGroupServer server;
 
-    public WifiDirectServerHandler(WifiDirectServer server) {
+    public WifiDirectGroupServerHandler(WifiDirectGroupServer server) {
         super();
         this.server = server;
     }
@@ -24,6 +24,17 @@ public class WifiDirectServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(final ChannelHandlerContext context) {
         this.server.accept(context.channel().remoteAddress().toString());
+        final ByteBuf msg = context.alloc().buffer(4);
+        msg.writeInt(WifiDirectUtil.PEER_CONNECTED);
+
+        final ChannelFuture future = context.writeAndFlush(msg);
+        future.addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                assert future == channelFuture;
+                context.close();
+            }
+        });
     }
 
     @Override

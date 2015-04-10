@@ -11,12 +11,14 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.SocketAddress;
 
 public class WifiDirectClient implements Runnable {
     private WifiDirectP2P p2p;
     private InetAddress hostAddress;
     private int port;
     private EventLoopGroup group;
+    private SocketAddress mSocket;
 
     public WifiDirectClient(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
@@ -39,7 +41,6 @@ public class WifiDirectClient implements Runnable {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
                     ChannelPipeline p = ch.pipeline();
-
                     if (finalSslCtx != null) {
                         p.addLast(finalSslCtx.newHandler(ch.alloc(),
                                                          WifiDirectClient.this.hostAddress.getHostAddress(),
@@ -47,14 +48,13 @@ public class WifiDirectClient implements Runnable {
                     }
 
                     p.addLast(new WifiDirectClientHandler(WifiDirectClient.this));
+                    WifiDirectClient.this.mSocket = ch.remoteAddress();
                 }
             });
 
             // Start the client.
             ChannelFuture f = b.connect(this.hostAddress.getHostAddress(),
                                         this.port).sync();
-
-            this.p2p.Trigger(this.hostAddress.getHostAddress()+" : "+this.port);
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
@@ -82,5 +82,9 @@ public class WifiDirectClient implements Runnable {
         }
 
         return null;
+    }
+
+    public void peerConnected() {
+        this.p2p.DeviceRegistered(this.mSocket.toString());
     }
 }

@@ -10,12 +10,15 @@ import android.net.wifi.p2p.WifiP2pDevice;
  * @author erbunao@up.edu.ph (earle)
  */
 public class WifiDirectUtil {
+    public static final int PEER_CONNECTED = 1001;
+    public static final int REQUEST_PEERS = 1002;
 
     public static final String defaultDeviceName = "MyDevice";
     public static final String defaultDeviceMACAddress = "Unknown";
     public static final String defaultDeviceIPAddress = "0.0.0.0";
     public static final String defaultGroupName = "MyP2PGroup";
     public static final int defaultServerPort = 4545;
+    public static final int defaultGroupServerPort = 3000;
     public static final int defaultBufferSize = 1024;
     public static final int defaultTimeOut = 3000;
     public static boolean SSL = System.getProperty("ssl") != null;

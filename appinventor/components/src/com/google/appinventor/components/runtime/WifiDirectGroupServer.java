@@ -1,6 +1,7 @@
 package com.google.appinventor.components.runtime;
 
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
+import com.google.gson.Gson;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -11,6 +12,8 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
+
 /**
  * Java NIO Server for WifiDirect Component
  *
@@ -18,20 +21,22 @@ import java.net.InetAddress;
  * @author erbunao@up.edu.ph (earle)
  */
 
-public class WifiDirectServer implements Runnable {
+public class WifiDirectGroupServer implements Runnable {
     private WifiDirectP2P p2p;
     private InetAddress hostAddress;
     private int port;
+    private ArrayList<String> activePeers;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
-    public WifiDirectServer(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
+    public WifiDirectGroupServer(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
         this.hostAddress = hostAddress;
         this.port = port;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
+        this.activePeers = new ArrayList<String>();
     }
 
     public void run() {
@@ -40,21 +45,21 @@ public class WifiDirectServer implements Runnable {
         try {
             ServerBootstrap b = new ServerBootstrap();
             final SslContext finalSslCtx = sslCtx;
-            b.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .option(ChannelOption.SO_BACKLOG, 100)
-                    .childHandler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
-                            ChannelPipeline p = ch.pipeline();
+            b.group(bossGroup, workerGroup);
+            b.channel(NioServerSocketChannel.class);
+            b.option(ChannelOption.SO_BACKLOG, 100);
+            b.childHandler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                public void initChannel(SocketChannel ch) throws Exception {
+                    ChannelPipeline p = ch.pipeline();
 
-                            if (finalSslCtx != null) {
-                                p.addLast(finalSslCtx.newHandler(ch.alloc()));
-                            }
+                    if (finalSslCtx != null) {
+                        p.addLast(finalSslCtx.newHandler(ch.alloc()));
+                    }
 
-                            p.addLast(new WifiDirectServerHandler(WifiDirectServer.this));
-                        }
-                    });
+                    p.addLast(new WifiDirectGroupServerHandler(WifiDirectGroupServer.this));
+                }
+            });
 
             // Start the server.
             ChannelFuture f = b.bind(this.hostAddress, this.port).sync();
@@ -71,12 +76,21 @@ public class WifiDirectServer implements Runnable {
     }
 
     public void accept(String client) {
+        this.activePeers.add(getAddress(client));
         this.p2p.ConnectionAccepted(client);
     }
 
     public void stop() {
         this.bossGroup.shutdownGracefully();
         this.workerGroup.shutdownGracefully();
+    }
+
+    public ArrayList<String> getActivePeers() {
+        return this.activePeers;
+    }
+
+    public String getActivePeersInJSON() {
+        return new Gson().toJson(this.activePeers);
     }
 
     public SslContext initiateSsl() {
@@ -91,5 +105,10 @@ public class WifiDirectServer implements Runnable {
         }
 
         return null;
+    }
+
+    private String getAddress(String remoteAddress) {
+        String[] parts = remoteAddress.split(":");
+        return parts[0];
     }
 }
