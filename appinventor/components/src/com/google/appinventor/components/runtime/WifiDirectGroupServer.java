@@ -46,8 +46,8 @@ public class WifiDirectGroupServer implements Runnable {
             ServerBootstrap b = new ServerBootstrap();
             final SslContext finalSslCtx = sslCtx;
             b.group(bossGroup, workerGroup);
+            b.option(ChannelOption.SO_KEEPALIVE, true);
             b.channel(NioServerSocketChannel.class);
-            b.option(ChannelOption.SO_BACKLOG, 100);
             b.childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
@@ -63,8 +63,6 @@ public class WifiDirectGroupServer implements Runnable {
 
             // Start the server.
             ChannelFuture f = b.bind(this.hostAddress, this.port).sync();
-
-            // Wait until the server socket is closed.
             f.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();

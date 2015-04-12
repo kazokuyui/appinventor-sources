@@ -27,14 +27,21 @@ public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
+    public void channelActive(final ChannelHandlerContext ctx) {
+//        this.client.peerConnected();
+//        this.client.trigger2();
+//        this.client.trigger("MESSAGE HELLO");
+    }
+
+    @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ByteBuf m = (ByteBuf) msg;
-
-        if(m.readInt() == WifiDirectUtil.PEER_CONNECTED) {
-            this.client.peerConnected();
-        }
-
         this.client.peerConnected();
+        this.client.trigger2();
+        this.client.trigger("MESSAGE HELLO");
+//        if(m.readInt() == WifiDirectUtil.PEER_CONNECTED) {
+//            this.client.peerConnected();
+//        }
     }
 
     @Override

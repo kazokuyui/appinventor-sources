@@ -35,8 +35,9 @@ public class WifiDirectClient implements Runnable {
             Bootstrap b = new Bootstrap();
             final SslContext finalSslCtx = sslCtx;
             b.group(this.group);
-            b.channel(NioSocketChannel.class);
             b.option(ChannelOption.TCP_NODELAY, true);
+            b.option(ChannelOption.SO_KEEPALIVE, true);
+            b.channel(NioSocketChannel.class);
             b.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
@@ -53,10 +54,7 @@ public class WifiDirectClient implements Runnable {
             });
 
             // Start the client.
-            ChannelFuture f = b.connect(this.hostAddress.getHostAddress(),
-                                        this.port).sync();
-
-            // Wait until the connection is closed.
+            ChannelFuture f = b.connect(this.hostAddress.getHostAddress(), this.port).sync();
             f.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -86,6 +84,10 @@ public class WifiDirectClient implements Runnable {
 
     public void peerConnected() {
         this.p2p.DeviceRegistered(this.mSocket.toString());
+    }
+
+    public void trigger2() {
+        this.p2p.PeersAvailable();
     }
 
     public void trigger(String msg) {
