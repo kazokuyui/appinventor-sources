@@ -3,6 +3,7 @@ package com.google.appinventor.components.runtime;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
+import io.netty.channel.Channel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -12,6 +13,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketAddress;
+import java.nio.channels.*;
 
 public class WifiDirectClient implements Runnable {
     private WifiDirectP2P p2p;
@@ -47,9 +49,6 @@ public class WifiDirectClient implements Runnable {
                                                          WifiDirectClient.this.hostAddress.getHostAddress(),
                                                          WifiDirectClient.this.port));
                     }
-
-                    p.addLast(new WifiDirectClientHandler(WifiDirectClient.this));
-                    WifiDirectClient.this.mSocket = ch.remoteAddress();
                 }
             });
 
@@ -83,11 +82,17 @@ public class WifiDirectClient implements Runnable {
     }
 
     public void peerConnected() {
-        this.p2p.DeviceRegistered("HELLO WORLD PEER CONNECTED");
+        SocketAddress socketAddress = this.mSocket;
+        if(socketAddress != null) {
+            this.p2p.DeviceRegistered(socketAddress.toString());
+        }
+        else {
+            this.p2p.DeviceRegistered("UNKNOWN ADDRESS");
+        }
     }
 
-    public void accept(String msg) {
-        this.p2p.ConnectionAccepted(msg);
+    public void setmSocket(SocketAddress socketAddress) {
+        this.mSocket = socketAddress;
     }
 
     public void trigger(String msg) {
