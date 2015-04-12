@@ -83,11 +83,11 @@ public class WifiDirectClient implements Runnable {
     }
 
     public void peerConnected() {
-        this.p2p.DeviceRegistered(this.mSocket.toString());
+        this.p2p.DeviceRegistered("HELLO WORLD PEER CONNECTED");
     }
 
-    public void trigger2() {
-        this.p2p.PeersAvailable();
+    public void accept(String msg) {
+        this.p2p.ConnectionAccepted(msg);
     }
 
     public void trigger(String msg) {

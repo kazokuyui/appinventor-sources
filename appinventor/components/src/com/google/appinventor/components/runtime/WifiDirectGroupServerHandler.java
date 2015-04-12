@@ -13,7 +13,7 @@ import io.netty.util.CharsetUtil;
  * @author erbunao@up.edu.ph (earle)
  */
 
-public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
+public class WifiDirectGroupServerHandler extends SimpleChannelInboundHandler<String> {
 
     private WifiDirectGroupServer server;
 
@@ -38,17 +38,23 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        ctx.write(msg);
+        this.server.accept("FROM CLIENT");
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
+        this.server.accept("FUCK YOU SERVER");
     }
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
+        this.server.accept("FUCK YOU SERVER");
         ctx.flush();
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        this.server.trigger(cause.toString());
+        this.server.accept("FUCK YOU SERVER");
         ctx.close();
     }
 }
