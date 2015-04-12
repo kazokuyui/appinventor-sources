@@ -24,9 +24,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(final ChannelHandlerContext context) {
         this.server.accept(context.channel().remoteAddress().toString());
-        final ByteBuf msg = context.alloc().buffer(4);
-        msg.writeInt(WifiDirectUtil.PEER_CONNECTED);
-
+        String msg = "Welcome client";
         final ChannelFuture future = context.writeAndFlush(msg);
         future.addListener(new ChannelFutureListener() {
             @Override
@@ -49,8 +47,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        // Close the connection when an exception is raised.
-        cause.printStackTrace();
+        this.server.trigger(cause.toString());
         ctx.close();
     }
 }

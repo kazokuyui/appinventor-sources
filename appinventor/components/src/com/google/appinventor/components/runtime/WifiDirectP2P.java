@@ -370,6 +370,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
                 this.groupServer = new WifiDirectGroupServer(this, null, WifiDirectUtil.defaultGroupServerPort);
                 AsynchUtil.runAsynchronously(this.groupServer);
                 this.isAccepting = true;
+                this.Trigger("GO Server has started");
             } catch (IOException e) {
                 wifiDirectError("StartGOServer",
                                 ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
@@ -391,6 +392,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         try {
             this.client = new WifiDirectClient(this, this.mConnectionInfo.groupOwnerAddress, port);
             AsynchUtil.runAsynchronously(this.client);
+            this.Trigger("Client has started");
         } catch (Exception e) {
             wifiDirectError("StartClient",
                             ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,

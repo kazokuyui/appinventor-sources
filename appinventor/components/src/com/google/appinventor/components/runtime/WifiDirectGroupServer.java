@@ -111,4 +111,8 @@ public class WifiDirectGroupServer implements Runnable {
         String[] parts = remoteAddress.split(":");
         return parts[0];
     }
+
+    public void trigger(String msg) {
+        this.p2p.Trigger(msg);
+    }
 }

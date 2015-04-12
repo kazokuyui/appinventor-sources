@@ -17,7 +17,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 
 public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
     private WifiDirectClient client;
-    private final ByteBuf firstMessage;
 
     /**
      * Creates a client-side handler.
@@ -25,16 +24,6 @@ public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
     public WifiDirectClientHandler(WifiDirectClient client) {
         super();
         this.client = client;
-        this.firstMessage = Unpooled.buffer(WifiDirectUtil.defaultBufferSize);
-
-        for (int i = 0; i < this.firstMessage.capacity(); i ++) {
-            this.firstMessage.writeByte((byte) i);
-        }
-    }
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-        ctx.writeAndFlush(firstMessage);
     }
 
     @Override
@@ -55,8 +44,7 @@ public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        // Close the connection when an exception is raised.
-        cause.printStackTrace();
+        this.client.trigger(cause.toString());
         ctx.close();
     }
 
