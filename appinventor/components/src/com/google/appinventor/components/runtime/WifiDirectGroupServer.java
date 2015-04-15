@@ -7,6 +7,10 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.Delimiters;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
@@ -57,6 +61,9 @@ public class WifiDirectGroupServer implements Runnable {
                         p.addLast(finalSslCtx.newHandler(ch.alloc()));
                     }
 
+                    p.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
+                    p.addLast(new StringDecoder());
+                    p.addLast(new StringEncoder());
                     p.addLast(new WifiDirectGroupServerHandler(WifiDirectGroupServer.this));
                 }
             });
@@ -73,9 +80,12 @@ public class WifiDirectGroupServer implements Runnable {
         }
     }
 
-    public void accept(String client) {
-        this.activePeers.add(getAddress(client));
-        this.p2p.ConnectionAccepted(client);
+    public void peerConnected(String peer) {
+        this.p2p.ConnectionAccepted(peer);
+    }
+
+    public void acceptPeer(WifiDirectPeer peer) {
+        this.p2p.ConnectionAccepted(peer.toString());
     }
 
     public void stop() {

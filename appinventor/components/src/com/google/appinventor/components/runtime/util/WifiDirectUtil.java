@@ -11,7 +11,8 @@ import android.net.wifi.p2p.WifiP2pDevice;
  */
 public class WifiDirectUtil {
     public static final int PEER_CONNECTED = 1001;
-    public static final int REQUEST_PEERS = 1002;
+    public static final int PEER_REGISTERED = 1002;
+    public static final int REQUEST_PEERS = 1003;
 
     public static final String defaultDeviceName = "MyDevice";
     public static final String defaultDeviceMACAddress = "Unknown";

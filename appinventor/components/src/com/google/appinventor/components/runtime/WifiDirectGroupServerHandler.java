@@ -6,6 +6,8 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.util.CharsetUtil;
 
+import java.net.InetAddress;
+
 /**
  * Java NIO Server Handler for WifiDirect Component
  *
@@ -13,7 +15,7 @@ import io.netty.util.CharsetUtil;
  * @author erbunao@up.edu.ph (earle)
  */
 
-public class WifiDirectGroupServerHandler extends SimpleChannelInboundHandler<String> {
+public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     private WifiDirectGroupServer server;
 
@@ -24,37 +26,35 @@ public class WifiDirectGroupServerHandler extends SimpleChannelInboundHandler<St
 
     @Override
     public void channelActive(final ChannelHandlerContext context) {
-        this.server.accept(context.channel().remoteAddress().toString());
-        ByteBuf msg = Unpooled.copiedBuffer("Welcome Client", CharsetUtil.UTF_8);
-
-        final ChannelFuture f = context.writeAndFlush(msg);
+        //ByteBuf msg = context.alloc().buffer(4);
+        //msg.writeInt(WifiDirectUtil.PEER_CONNECTED);
+        String msg = "PEER_CONNECTED" + "\r\n";
+        final ChannelFuture f = context.channel().writeAndFlush(msg);
+        //context.channel().flush();
         f.addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                WifiDirectGroupServerHandler.this.server.accept("WRITING: DONE!");
+                WifiDirectGroupServerHandler.this.server.peerConnected(context.channel().remoteAddress().toString() + "01");
             }
         });
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        this.server.accept("FROM CLIENT");
+    public void channelInactive(ChannelHandlerContext context) {
+        // for disconnection
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
-        this.server.accept("FUCK YOU SERVER");
+    public void channelRead(ChannelHandlerContext channelHandlerContext, Object msg) {
     }
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
-        this.server.accept("FUCK YOU SERVER");
         ctx.flush();
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        this.server.accept("FUCK YOU SERVER");
         ctx.close();
     }
 }

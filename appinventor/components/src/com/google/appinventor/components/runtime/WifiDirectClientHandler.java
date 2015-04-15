@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 
 /**
  * Handler implementation for the echo client.  It initiates the ping-pong
@@ -17,7 +18,7 @@ import io.netty.util.CharsetUtil;
  * @author erbunao@up.edu.ph (earle)
  */
 
-public class WifiDirectClientHandler extends SimpleChannelInboundHandler<String> {
+public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
     private WifiDirectClient client;
 
     /**
@@ -29,18 +30,13 @@ public class WifiDirectClientHandler extends SimpleChannelInboundHandler<String>
     }
 
     @Override
-    public void channelActive(final ChannelHandlerContext ctx) {
-        this.client.setmSocket(ctx.channel().remoteAddress());
-        this.client.peerConnected();
-    }
-
-    @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        ByteBuf m = (ByteBuf) msg;
-    }
+        this.client.trigger("PEER_CONNECTED");
 
-    @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
+        ByteBuf m = (ByteBuf) msg;
+        if(m.readInt() == WifiDirectUtil.PEER_CONNECTED) {
+            this.client.trigger("PEER_CONNECTED");
+        }
     }
 
     @Override

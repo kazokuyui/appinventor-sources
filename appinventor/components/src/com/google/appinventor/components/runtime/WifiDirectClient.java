@@ -7,6 +7,12 @@ import io.netty.channel.Channel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.Delimiters;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
@@ -30,31 +36,37 @@ public class WifiDirectClient implements Runnable {
     }
 
     public void run() {
-        // Configure SSL.git
         SslContext sslCtx = this.initiateSsl();
 
         try {
             Bootstrap b = new Bootstrap();
             final SslContext finalSslCtx = sslCtx;
             b.group(this.group);
-            b.option(ChannelOption.TCP_NODELAY, true);
             b.option(ChannelOption.SO_KEEPALIVE, true);
             b.channel(NioSocketChannel.class);
+            b.handler(new LoggingHandler(LogLevel.INFO));
             b.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
                     ChannelPipeline p = ch.pipeline();
+
                     if (finalSslCtx != null) {
                         p.addLast(finalSslCtx.newHandler(ch.alloc(),
                                                          WifiDirectClient.this.hostAddress.getHostAddress(),
                                                          WifiDirectClient.this.port));
                     }
+
+                    p.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
+                    p.addLast(new StringDecoder());
+                    p.addLast(new StringEncoder());
+                    p.addLast(new WifiDirectClientHandler(WifiDirectClient.this));
                 }
             });
 
             // Start the client.
             ChannelFuture f = b.connect(this.hostAddress.getHostAddress(), this.port).sync();
             f.channel().closeFuture().sync();
+            this.setmSocket(f.channel().remoteAddress());
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
