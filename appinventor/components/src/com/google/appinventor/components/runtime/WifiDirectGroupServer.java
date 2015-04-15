@@ -62,8 +62,8 @@ public class WifiDirectGroupServer implements Runnable {
                     }
 
                     p.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
-                    p.addLast(new StringDecoder());
                     p.addLast(new StringEncoder());
+                    p.addLast(new StringDecoder());
                     p.addLast(new WifiDirectGroupServerHandler(WifiDirectGroupServer.this));
                 }
             });

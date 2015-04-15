@@ -57,8 +57,8 @@ public class WifiDirectClient implements Runnable {
                     }
 
                     p.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
-                    p.addLast(new StringDecoder());
                     p.addLast(new StringEncoder());
+                    p.addLast(new StringDecoder());
                     p.addLast(new WifiDirectClientHandler(WifiDirectClient.this));
                 }
             });

@@ -46,6 +46,7 @@ public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        this.client.trigger(cause.toString());
         ctx.close();
     }
 

@@ -55,6 +55,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        this.server.trigger(cause.toString());
         ctx.close();
     }
 }
