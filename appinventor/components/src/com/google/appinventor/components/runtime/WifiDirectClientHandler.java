@@ -1,13 +1,8 @@
 package com.google.appinventor.components.runtime;
 
-import com.google.appinventor.components.runtime.util.WifiDirectUtil;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import com.google.appinventor.components.runtime.util.PeerMessage;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
 
 /**
  * Handler implementation for the echo client.  It initiates the ping-pong
@@ -31,11 +26,17 @@ public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        this.client.trigger("PEER_CONNECTED");
-
-        ByteBuf m = (ByteBuf) msg;
-        if(m.readInt() == WifiDirectUtil.PEER_CONNECTED) {
-            this.client.trigger("PEER_CONNECTED");
+        PeerMessage response = this.parseResponse((String) msg);
+        if(response.getType() == PeerMessage.CONTROL_DATA) {
+            if(response.getData().equals(PeerMessage.CTRL_CONNECTED)) {
+                this.client.peerConnected();
+            }
+            else if(response.getData().equals(PeerMessage.CTRL_REGISTERED)) {
+                this.client.peerRegistered();
+            }
+        }
+        else if(response.getType() == PeerMessage.PEER_DATA) {
+            //handle peer data
         }
     }
 
@@ -47,7 +48,11 @@ public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         this.client.trigger(cause.toString());
+        cause.printStackTrace();
         ctx.close();
     }
 
+    public PeerMessage parseResponse(String response) {
+        return new PeerMessage(PeerMessage.CONTROL_DATA, PeerMessage.CTRL_REGISTERED);
+    }
 }

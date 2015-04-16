@@ -185,6 +185,8 @@ public final class ErrorMessages {
   public static final int ERROR_WIFIDIRECT_UNABLE_TO_READ = 2802;
   public static final int ERROR_WIFIDIRECT_UNABLE_TO_WRITE = 2803;
   public static final int ERROR_WIFIDIRECT_REGISTRATION_FAILED = 2804;
+  public static final int ERROR_WIFIDIRECT_CLIENT_FAILED = 2805;
+  public static final int ERROR_WIFIDIRECT_SERVER_FAILED = 2806;
 
   // Please start the next group of error numbers at 2901.
 
@@ -462,6 +464,8 @@ public final class ErrorMessages {
     errorMessages.put(ERROR_WIFIDIRECT_UNABLE_TO_READ, "Unable to read: %s");
     errorMessages.put(ERROR_WIFIDIRECT_UNABLE_TO_WRITE, "Unable to write: %s");
     errorMessages.put(ERROR_WIFIDIRECT_REGISTRATION_FAILED, "Unable to register to the owner: %s");
+    errorMessages.put(ERROR_WIFIDIRECT_CLIENT_FAILED, "Error occurred in the client: %s");
+    errorMessages.put(ERROR_WIFIDIRECT_SERVER_FAILED, "Error occurred in the server: %s");
   }
 
   private ErrorMessages() {

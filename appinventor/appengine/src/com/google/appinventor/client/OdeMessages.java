@@ -3731,6 +3731,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GroupInfoAvailableEvents();
 
+  @DefaultMessage("ConnectedToNetwork")
+  @Description("")
+  String ConnectedToNetworkEvents();
+
   @DefaultMessage("DataReceived")
   @Description("")
   String DataReceivedEvents();

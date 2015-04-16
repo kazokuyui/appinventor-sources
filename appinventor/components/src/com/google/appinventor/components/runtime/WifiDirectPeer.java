@@ -15,22 +15,18 @@ public class WifiDirectPeer {
     private String name;
     private String macAddress;
     private String ipAddress;
-    private ArrayList<Integer> ports;
+    private int port;
 
-    public WifiDirectPeer(String name, String macAddress, String ipAddress, ArrayList<Integer> ports) {
+    public WifiDirectPeer(String name, String macAddress, String ipAddress, int port) {
         this.name = name;
         this.macAddress = macAddress;
         this.ipAddress = ipAddress;
-        this.ports = (ArrayList<Integer>) ports.clone();
+        this.port = port;
     }
 
     public WifiDirectPeer(WifiP2pDevice device) {
         this.name = device.deviceName;
         this.macAddress = device.deviceAddress;
-    }
-
-    public void addPort(int newPort) {
-        this.ports.add(newPort);
     }
 
     public String getName() {
@@ -57,12 +53,12 @@ public class WifiDirectPeer {
         this.ipAddress = ipAddress;
     }
 
-    public ArrayList<Integer> getPorts() {
-        return ports;
+    public int getPort() {
+        return port;
     }
 
-    public void setPorts(ArrayList<Integer> ports) {
-        this.ports = ports;
+    public void setPort(int port) {
+        this.port = port;
     }
 
     public String toString() {

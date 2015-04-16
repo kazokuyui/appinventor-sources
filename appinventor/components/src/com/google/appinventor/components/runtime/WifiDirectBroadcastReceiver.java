@@ -44,7 +44,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
             NetworkInfo networkInfo = (NetworkInfo) intent.getParcelableExtra(EXTRA_NETWORK_INFO);
 
             if (networkInfo.isConnected()) {
-                this.main.DeviceConnected();
+                this.main.ConnectedToNetwork();
             }
 
             this.main.setIsConnected(networkInfo.isConnected());

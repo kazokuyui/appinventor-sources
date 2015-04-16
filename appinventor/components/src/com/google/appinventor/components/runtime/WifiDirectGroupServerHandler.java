@@ -1,12 +1,10 @@
 package com.google.appinventor.components.runtime;
 
-import com.google.appinventor.components.runtime.util.WifiDirectUtil;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
-import io.netty.util.CharsetUtil;
-
-import java.net.InetAddress;
+import com.google.appinventor.components.runtime.util.PeerMessage;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
 /**
  * Java NIO Server Handler for WifiDirect Component
@@ -16,7 +14,6 @@ import java.net.InetAddress;
  */
 
 public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
-
     private WifiDirectGroupServer server;
 
     public WifiDirectGroupServerHandler(WifiDirectGroupServer server) {
@@ -26,26 +23,19 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(final ChannelHandlerContext context) {
-        //ByteBuf msg = context.alloc().buffer(4);
-        //msg.writeInt(WifiDirectUtil.PEER_CONNECTED);
-        String msg = "PEER_CONNECTED" + "\r\n";
-        final ChannelFuture f = context.channel().writeAndFlush(msg);
-        //context.channel().flush();
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, PeerMessage.CTRL_CONNECTED);
+        final ChannelFuture f = context.channel().writeAndFlush(msg.toString());
         f.addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                WifiDirectGroupServerHandler.this.server.peerConnected(context.channel().remoteAddress().toString() + "01");
+                WifiDirectGroupServerHandler.this.server.peerConnected(context.channel().remoteAddress().toString());
             }
         });
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext context) {
-        // for disconnection
-    }
-
-    @Override
     public void channelRead(ChannelHandlerContext channelHandlerContext, Object msg) {
+
     }
 
     @Override
@@ -55,7 +45,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        this.server.trigger(cause.toString());
+        cause.printStackTrace();
         ctx.close();
     }
 }

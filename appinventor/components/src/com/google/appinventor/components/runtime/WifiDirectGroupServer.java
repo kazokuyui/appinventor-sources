@@ -1,5 +1,6 @@
 package com.google.appinventor.components.runtime;
 
+import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 import com.google.gson.Gson;
 import io.netty.bootstrap.ServerBootstrap;
@@ -29,7 +30,7 @@ public class WifiDirectGroupServer implements Runnable {
     private WifiDirectP2P p2p;
     private InetAddress hostAddress;
     private int port;
-    private ArrayList<String> activePeers;
+    private ArrayList<WifiDirectPeer> activePeers;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -40,7 +41,7 @@ public class WifiDirectGroupServer implements Runnable {
         this.port = port;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
-        this.activePeers = new ArrayList<String>();
+        this.activePeers = new ArrayList<WifiDirectPeer>();
     }
 
     public void run() {
@@ -85,7 +86,7 @@ public class WifiDirectGroupServer implements Runnable {
     }
 
     public void acceptPeer(WifiDirectPeer peer) {
-        this.p2p.ConnectionAccepted(peer.toString());
+        this.p2p.ConnectionRegistered(peer.toString());
     }
 
     public void stop() {
@@ -93,7 +94,7 @@ public class WifiDirectGroupServer implements Runnable {
         this.workerGroup.shutdownGracefully();
     }
 
-    public ArrayList<String> getActivePeers() {
+    public ArrayList<WifiDirectPeer> getActivePeers() {
         return this.activePeers;
     }
 

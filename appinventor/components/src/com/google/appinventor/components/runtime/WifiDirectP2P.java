@@ -40,7 +40,6 @@ import java.util.List;
                  "android.permission.READ_PHONE_STATE")
 @SimpleObject
 public class WifiDirectP2P extends AndroidNonvisibleComponent implements Component, OnDestroyListener, Deleteable {
-
     public String TAG;
 
     private WifiP2pManager manager;
@@ -91,24 +90,15 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.isRegistered = false;
     }
 
+    /* Network Layer Events */
     @SimpleEvent(description = "List of nearby devices is available")
     public void DevicesAvailable() {
         EventDispatcher.dispatchEvent(this, "DevicesAvailable");
     }
 
-    @SimpleEvent(description = "This device is connected")
-    public void DeviceConnected() {
-        EventDispatcher.dispatchEvent(this, "DeviceConnected");
-    }
-
     @SimpleEvent(description = "This device information is available")
     public void DeviceInfoAvailable() {
         EventDispatcher.dispatchEvent(this, "DeviceInfoAvailable");
-    }
-
-    @SimpleEvent(description = "Peers information is available")
-    public void PeersAvailable()  {
-        EventDispatcher.dispatchEvent(this, "PeersAvailable");
     }
 
     @SimpleEvent(description = "Connection information is available")
@@ -121,16 +111,44 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "GroupInfoAvailable");
     }
 
-    @SimpleEvent(description = "Device is now registered to the group owner")
+    @SimpleEvent(description = "This device is connected")
+    public void ConnectedToNetwork() {
+        EventDispatcher.dispatchEvent(this, "ConnectedToNetwork");
+    }
+
+    @SimpleEvent(description = "Channel is disconnected to the network")
+    public void ChannelDisconnected() {
+        EventDispatcher.dispatchEvent(this, "ChannelDisconnected");
+    }
+
+    /* Client Appplication Layer Events */
+    @SimpleEvent(description = "Device connected to the Group Owner Server")
+    public void ConnectedToGroupOwner() {
+        EventDispatcher.dispatchEvent(this, "ConnectedToGroupOwner");
+    }
+
+    @SimpleEvent(description = "Device is now registered to the Group Owner Server")
     public void DeviceRegistered(String IPAddress) {
         EventDispatcher.dispatchEvent(this, "DeviceRegistered", IPAddress);
     }
 
-    @SimpleEvent(description = "Connection of a peer is accepted")
+    @SimpleEvent(description = "Peers information is available from the Group Owner Server")
+    public void PeersAvailable()  {
+        EventDispatcher.dispatchEvent(this, "PeersAvailable");
+    }
+
+    /* Server Application Layer Events */
+    @SimpleEvent(description = "Connection of a peer is accepted by the Group Owner Server")
     public void ConnectionAccepted(String deviceName) {
         EventDispatcher.dispatchEvent(this, "ConnectionAccepted", deviceName);
     }
 
+    @SimpleEvent(description = "Connection of a peer is registered by the Group Owner Server")
+    public void ConnectionRegistered(String deviceName) {
+        EventDispatcher.dispatchEvent(this, "ConnectionRegistered", deviceName);
+    }
+
+    /* Core Events of the framework for Peer-to-Peer communication */
     @SimpleEvent(description = "Data is received")
     public void DataReceived(String msg) {
         EventDispatcher.dispatchEvent(this, "DataReceived", msg);
@@ -139,11 +157,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleEvent(description = "Data sent")
     public void DataSent(String msg) {
         EventDispatcher.dispatchEvent(this, "DataSent", msg);
-    }
-
-    @SimpleEvent(description = "Channel is disconnected")
-    public void ChannelDisconnected() {
-        EventDispatcher.dispatchEvent(this, "ChannelDisconnected");
     }
 
     @SimpleEvent(description = "For testing purposes only")
@@ -392,7 +405,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         try {
             this.client = new WifiDirectClient(this, this.mConnectionInfo.groupOwnerAddress, port);
             AsynchUtil.runAsynchronously(this.client);
-            this.Trigger("Client has started");
         } catch (Exception e) {
             wifiDirectError("StartClient",
                             ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
@@ -454,7 +466,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.isRegistered = isRegistered;
     }
 
-    private void wifiDirectError(String functionName, int errorCode, Object... args) {
+    public void wifiDirectError(String functionName, int errorCode, Object... args) {
         this.form.dispatchErrorOccurredEvent(this, functionName, errorCode, args);
     }
 }
