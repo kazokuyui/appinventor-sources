@@ -23,12 +23,14 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(final ChannelHandlerContext context) {
-        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, PeerMessage.CTRL_CONNECTED);
+        String client_port = context.channel().remoteAddress().toString().substring(1);
+        final String client = client_port.split(":")[0];
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, client, PeerMessage.CTRL_CONNECTED);
         final ChannelFuture f = context.channel().writeAndFlush(msg.toString());
         f.addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                WifiDirectGroupServerHandler.this.server.peerConnected(context.channel().remoteAddress().toString());
+                WifiDirectGroupServerHandler.this.server.peerConnected(client);
             }
         });
     }
@@ -45,7 +47,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
+        this.server.trigger(cause.toString());
         ctx.close();
     }
 }

@@ -70,7 +70,7 @@ import com.google.appinventor.components.runtime.util.ErrorMessages;
     + "     (<code>RequestFollowers</code>)</li>\n "
     + "<li> Getting the most recent messages of users followed by the "
     + "     logged-in user (<code>RequestFriendTimeline</code>)</li>\n "
-    + "<li> Getting the most recent mentions of the logged-in user "
+    + "<li> Getting thef most recent mentions of the logged-in user "
     + "     (<code>RequestMentions</code>)</li></ul></p>\n "
     + "<p>You must obtain a Consumer Key and Consumer Secret for Twitter authorization "
     + " specific to your app from http://twitter.com/oauth_clients/new",

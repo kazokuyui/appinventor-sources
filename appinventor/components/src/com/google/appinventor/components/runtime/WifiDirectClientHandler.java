@@ -29,10 +29,10 @@ public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
         PeerMessage response = this.parseResponse((String) msg);
         if(response.getType() == PeerMessage.CONTROL_DATA) {
             if(response.getData().equals(PeerMessage.CTRL_CONNECTED)) {
-                this.client.peerConnected();
+                this.client.peerConnected(response.getHeader());
             }
             else if(response.getData().equals(PeerMessage.CTRL_REGISTERED)) {
-                this.client.peerRegistered();
+                this.client.peerRegistered(new WifiDirectPeer("wow", "wow", "wow", 4545));
             }
         }
         else if(response.getType() == PeerMessage.PEER_DATA) {
@@ -48,11 +48,11 @@ public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         this.client.trigger(cause.toString());
-        cause.printStackTrace();
         ctx.close();
     }
 
     public PeerMessage parseResponse(String response) {
-        return new PeerMessage(PeerMessage.CONTROL_DATA, PeerMessage.CTRL_REGISTERED);
+        String[] separated = response.split("/");
+        return new PeerMessage(Integer.parseInt(separated[0]), separated[1], separated[2]);
     }
 }

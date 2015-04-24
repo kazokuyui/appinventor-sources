@@ -1,5 +1,6 @@
 package com.google.appinventor.components.runtime;
 
+import android.os.Handler;
 import com.google.appinventor.components.runtime.util.AsynchUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
@@ -29,6 +30,7 @@ public class WifiDirectClient implements Runnable {
     private SocketAddress mSocket;
     private int state;
     private WifiDirectPeer representation;
+    private Handler handler;
 
     public WifiDirectClient(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
@@ -66,13 +68,6 @@ public class WifiDirectClient implements Runnable {
 
             // Start the client.
             final ChannelFuture f = b.connect(this.hostAddress.getHostAddress(), this.port).sync();
-            f.addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    WifiDirectClient.this.setmSocket(f.channel().remoteAddress());
-                }
-            });
-
             f.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -100,22 +95,30 @@ public class WifiDirectClient implements Runnable {
         return null;
     }
 
-    public void peerConnected() {
-        this.p2p.ConnectedToGroupOwner();
+    public void peerConnected(final String ip) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectClient.this.p2p.ConnectedToGroupOwner(ip);
+            }
+        });
     }
 
-    public void peerRegistered() {
-        SocketAddress socketAddress = this.mSocket;
-        if(socketAddress != null) {
-            this.p2p.DeviceRegistered(socketAddress.toString());
-        }
-        else {
-            this.p2p.DeviceRegistered(WifiDirectUtil.defaultDeviceIPAddress);
-        }
+    public void peerRegistered(final WifiDirectPeer peer) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectClient.this.p2p.DeviceRegistered(peer.toString());
+            }
+        });
     }
 
     public void setmSocket(SocketAddress socketAddress) {
         this.mSocket = socketAddress;
+    }
+
+    public void setHandler(Handler uiHandler) {
+        this.handler = uiHandler;
     }
 
     public void trigger(String msg) {
