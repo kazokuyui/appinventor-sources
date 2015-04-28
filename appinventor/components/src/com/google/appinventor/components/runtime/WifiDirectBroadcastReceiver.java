@@ -41,7 +41,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
                 return;
             }
 
-            NetworkInfo networkInfo = (NetworkInfo) intent.getParcelableExtra(EXTRA_NETWORK_INFO);
+            NetworkInfo networkInfo = intent.getParcelableExtra(EXTRA_NETWORK_INFO);
 
             if (networkInfo.isConnected()) {
                 this.main.ConnectedToNetwork();
@@ -70,7 +70,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
 
     @Override
     public void onChannelDisconnected() {
-        this.main.ChannelDisconnected();
+        this.main.DisconnectedToNetwork();
     }
 
     @Override

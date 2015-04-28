@@ -1,8 +1,6 @@
 package com.google.appinventor.components.runtime;
 
 import android.os.Handler;
-import com.google.appinventor.components.runtime.util.AsynchUtil;
-import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -20,19 +18,17 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.SocketAddress;
 
-public class WifiDirectClient implements Runnable {
+public class WifiDirectControlClient implements Runnable {
     private WifiDirectP2P p2p;
     private InetAddress hostAddress;
     private int port;
     private EventLoopGroup group;
-    private SocketAddress mSocket;
     private int state;
-    private WifiDirectPeer representation;
+    private WifiDirectPeer mPeer;
     private Handler handler;
 
-    public WifiDirectClient(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
+    public WifiDirectControlClient(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
         this.hostAddress = hostAddress;
         this.port = port;
@@ -55,24 +51,23 @@ public class WifiDirectClient implements Runnable {
 
                     if (finalSslCtx != null) {
                         p.addLast(finalSslCtx.newHandler(ch.alloc(),
-                                                         WifiDirectClient.this.hostAddress.getHostAddress(),
-                                                         WifiDirectClient.this.port));
+                                                         WifiDirectControlClient.this.hostAddress.getHostAddress(),
+                                                         WifiDirectControlClient.this.port));
                     }
 
-                    p.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
+                    p.addLast(new DelimiterBasedFrameDecoder(WifiDirectUtil.controlBufferSize,
+                                                             Delimiters.lineDelimiter()));
                     p.addLast(new StringEncoder());
                     p.addLast(new StringDecoder());
-                    p.addLast(new WifiDirectClientHandler(WifiDirectClient.this));
+                    p.addLast(new WifiDirectClientHandler(WifiDirectControlClient.this));
                 }
             });
 
-            // Start the client.
             final ChannelFuture f = b.connect(this.hostAddress.getHostAddress(), this.port).sync();
             f.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            // Shut down the event loop to terminate all threads.
             this.group.shutdownGracefully();
         }
     }
@@ -99,7 +94,7 @@ public class WifiDirectClient implements Runnable {
         this.handler.post(new Runnable() {
             @Override
             public void run() {
-                WifiDirectClient.this.p2p.ConnectedToGroupOwner(ip);
+                WifiDirectControlClient.this.p2p.DeviceConnected(ip);
             }
         });
     }
@@ -108,13 +103,9 @@ public class WifiDirectClient implements Runnable {
         this.handler.post(new Runnable() {
             @Override
             public void run() {
-                WifiDirectClient.this.p2p.DeviceRegistered(peer.toString());
+                WifiDirectControlClient.this.p2p.DeviceRegistered(peer.toString());
             }
         });
-    }
-
-    public void setmSocket(SocketAddress socketAddress) {
-        this.mSocket = socketAddress;
     }
 
     public void setHandler(Handler uiHandler) {

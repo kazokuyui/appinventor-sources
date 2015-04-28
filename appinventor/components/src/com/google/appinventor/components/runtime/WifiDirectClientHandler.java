@@ -14,12 +14,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  */
 
 public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
-    private WifiDirectClient client;
+    private WifiDirectControlClient client;
 
-    /**
-     * Creates a client-side handler.
-     */
-    public WifiDirectClientHandler(WifiDirectClient client) {
+    public WifiDirectClientHandler(WifiDirectControlClient client) {
         super();
         this.client = client;
     }

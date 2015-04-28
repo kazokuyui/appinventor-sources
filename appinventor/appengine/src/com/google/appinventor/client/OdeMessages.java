@@ -3735,6 +3735,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String ConnectedToNetworkEvents();
 
+  @DefaultMessage("DisconnectedToNetwork")
+  @Description("")
+  String DisconnectedToNetworkEvents();
+
   @DefaultMessage("DataReceived")
   @Description("")
   String DataReceivedEvents();

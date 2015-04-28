@@ -16,8 +16,10 @@ public class WifiDirectUtil {
     public static final String defaultGroupName = "MyP2PGroup";
     public static final int defaultServerPort = 4545;
     public static final int defaultGroupServerPort = 3000;
+    public static final int controlBufferSize = 8192;
     public static final int defaultBufferSize = 1024;
     public static final int defaultTimeOut = 3000;
+
     public static boolean SSL = System.getProperty("ssl") != null;
 
     public static String deviceToString(WifiP2pDevice device) {

@@ -62,7 +62,8 @@ public class WifiDirectGroupServer implements Runnable {
                         p.addLast(finalSslCtx.newHandler(ch.alloc()));
                     }
 
-                    p.addLast(new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
+                    p.addLast(new DelimiterBasedFrameDecoder(WifiDirectUtil.controlBufferSize,
+                                                             Delimiters.lineDelimiter()));
                     p.addLast(new StringEncoder());
                     p.addLast(new StringDecoder());
                     p.addLast(new WifiDirectGroupServerHandler(WifiDirectGroupServer.this));
@@ -85,7 +86,7 @@ public class WifiDirectGroupServer implements Runnable {
         this.p2p.ConnectionAccepted(peer);
     }
 
-    public void acceptPeer(WifiDirectPeer peer) {
+    public void peerRegistered(WifiDirectPeer peer) {
         this.p2p.ConnectionRegistered(peer.toString());
     }
 

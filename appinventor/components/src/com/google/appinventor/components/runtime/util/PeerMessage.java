@@ -19,7 +19,7 @@ public class PeerMessage {
     public PeerMessage(int type, String data) {
         this.type = type;
         this.data = data;
-        this.header = "";
+        this.header = " ";
     }
 
     public PeerMessage(int type, String header, String data) {

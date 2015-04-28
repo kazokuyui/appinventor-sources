@@ -43,32 +43,28 @@ import java.util.List;
 public class WifiDirectP2P extends AndroidNonvisibleComponent implements Component, OnDestroyListener, Deleteable {
     public String TAG;
 
+    /* Network layer for WifiDirect access */
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
     private BroadcastReceiver receiver;
 
-    private WifiDirectGroupServer groupServer;
-    private WifiDirectClient client;
-
-    private Collection<WifiP2pDevice> availableDevices;
-    private Collection<WifiP2pDevice> mPeers;
+    /* WifiDirect Info for this Device */
     private WifiP2pDevice mDevice;
     private WifiP2pDevice mGroupOwner;
     private WifiP2pGroup mGroup;
     private WifiP2pInfo mConnectionInfo;
 
-    private String IPAddress;
-    private int serverPort;
-    private boolean isAvailable;
-    private boolean isConnected;
-    private boolean isAccepting;
-    private boolean isRegistered;
+    /* Application Layer Control Planes */
+    private WifiDirectGroupServer groupServer;
+    private WifiDirectControlClient controlClient;
+    private Collection<WifiP2pDevice> availableDevices;
+    private Collection<WifiDirectPeer> availablePeers;
 
     private Handler handler;
 
     public WifiDirectP2P(ComponentContainer container) {
         this(container.$form(), "WifiDirectP2P");
-        form.registerForOnDestroy(this);
+        this.form.registerForOnDestroy(this);
     }
 
     private WifiDirectP2P(Form form, String TAG) {
@@ -85,53 +81,47 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
         form.registerReceiver(this.receiver, intentFilter);
 
-        this.IPAddress = WifiDirectUtil.defaultDeviceIPAddress;
-        this.serverPort = WifiDirectUtil.defaultServerPort;
-        this.isAvailable = false;
-        this.isConnected = false;
-        this.isAccepting = false;
-        this.isRegistered = false;
         this.handler = new Handler();
     }
 
     /* Network Layer Events */
-    @SimpleEvent(description = "List of nearby devices is available")
+    @SimpleEvent(description = "List of nearby devices is available; Triggered by DiscoverDevices")
     public void DevicesAvailable() {
         EventDispatcher.dispatchEvent(this, "DevicesAvailable");
     }
 
-    @SimpleEvent(description = "This device information is available")
+    @SimpleEvent(description = "This device information is available; Triggered by RequestConnectionInfo")
     public void DeviceInfoAvailable() {
         EventDispatcher.dispatchEvent(this, "DeviceInfoAvailable");
     }
 
-    @SimpleEvent(description = "Connection information is available")
+    @SimpleEvent(description = "Connection information is available; Triggered by RequestConnectionInfo")
     public void ConnectionInfoAvailable() {
         EventDispatcher.dispatchEvent(this, "ConnectionInfoAvailable");
     }
 
-    @SimpleEvent(description = "Group information is available")
+    @SimpleEvent(description = "Group information is available; Triggered by RequestGroupInfo")
     public void GroupInfoAvailable() {
         EventDispatcher.dispatchEvent(this, "GroupInfoAvailable");
     }
 
-    @SimpleEvent(description = "This device is connected")
+    @SimpleEvent(description = "This device is connected; Triggered by Connect")
     public void ConnectedToNetwork() {
         EventDispatcher.dispatchEvent(this, "ConnectedToNetwork");
     }
 
-    @SimpleEvent(description = "Channel is disconnected to the network")
-    public void ChannelDisconnected() {
-        EventDispatcher.dispatchEvent(this, "ChannelDisconnected");
+    @SimpleEvent(description = "Channel is disconnected to the network; Triggered by Disconnect")
+    public void DisconnectedToNetwork() {
+        EventDispatcher.dispatchEvent(this, "DisconnectedToNetwork");
     }
 
-    /* Client Appplication Layer Events */
-    @SimpleEvent(description = "Device connected to the Group Owner Server")
-    public void ConnectedToGroupOwner(String ip) {
-        EventDispatcher.dispatchEvent(this, "ConnectedToGroupOwner", ip);
+    /* Client Application Layer Events */
+    @SimpleEvent(description = "Device connected to the Group Owner Server; Triggered by ControlClient.peerConnected")
+    public void DeviceConnected(String ipAddress) {
+        EventDispatcher.dispatchEvent(this, "DeviceConnected", ipAddress);
     }
 
-    @SimpleEvent(description = "Device is now registered to the Group Owner Server")
+    @SimpleEvent(description = "Device is now registered to the Group Owner Server; Triggered by ControlClient.peerRegistered")
     public void DeviceRegistered(String client) {
         EventDispatcher.dispatchEvent(this, "DeviceRegistered", client);
     }
@@ -142,12 +132,12 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     /* Server Application Layer Events */
-    @SimpleEvent(description = "Connection of a peer is accepted by the Group Owner Server")
-    public void ConnectionAccepted(String deviceName) {
-        EventDispatcher.dispatchEvent(this, "ConnectionAccepted", deviceName);
+    @SimpleEvent(description = "Connection of a peer is accepted by the Group Owner Server; Triggered by GroupServer.peerConnected")
+    public void ConnectionAccepted(String ipAddress) {
+        EventDispatcher.dispatchEvent(this, "ConnectionAccepted", ipAddress);
     }
 
-    @SimpleEvent(description = "Connection of a peer is registered by the Group Owner Server")
+    @SimpleEvent(description = "Connection of a peer is registered by the Group Owner Server; Triggered by GroupServer.peerRegistered")
     public void ConnectionRegistered(String deviceName) {
         EventDispatcher.dispatchEvent(this, "ConnectionRegistered", deviceName);
     }
@@ -178,13 +168,13 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleProperty(description = "Returns true if WiFi Direct connection is available",
                     category = PropertyCategory.BEHAVIOR)
     public boolean Available() {
-        return this.isAvailable;
+        return false;
     }
 
     @SimpleProperty(description = "Returns true if this device is connected to any other device",
                     category = PropertyCategory.BEHAVIOR)
     public boolean Connected() {
-        return this.isConnected;
+        return false;
     }
 
     @SimpleProperty(description = "Returns the representation of this device with the format" +
@@ -221,9 +211,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleProperty(description = "Returns the IP address of the device",
                     category = PropertyCategory.BEHAVIOR)
     public String DeviceIPAddress() {
-        if(this.isConnected) {
-            return this.IPAddress;
-        }
         return WifiDirectUtil.defaultDeviceIPAddress;
     }
 
@@ -243,9 +230,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
                     category = PropertyCategory.BEHAVIOR)
     public List<String> AvailablePeers() {
         List<String> peers = new ArrayList<String>();
-        for(WifiP2pDevice peer: this.mPeers) {
-            peers.add(WifiDirectUtil.deviceToString(peer)); //temp
-        }
         return peers;
     }
 
@@ -291,28 +275,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         return this.mConnectionInfo != null && this.mConnectionInfo.isGroupOwner;
     }
 
-    @SimpleProperty(description = "Returns true if this device is accepting a connection",
-                    category = PropertyCategory.BEHAVIOR)
-    public boolean IsAccepting() {
-        return this.isAccepting;
-    }
-
-    @SimpleProperty(description = "Returns true if this device is already registered to the Group Owner",
-                    category = PropertyCategory.BEHAVIOR)
-    public boolean IsRegistered() {
-        return this.isRegistered;
-    }
-
-    @SimpleProperty(description = "Server port",
-                    category = PropertyCategory.BEHAVIOR)
-    public int ServerPort() {
-        return this.serverPort;
-    }
-
-    @SimpleProperty
-    public void ServerPort(int serverPort) {
-        this.serverPort = serverPort;
-    }
 
     @SimpleFunction(description = "Scan all devices nearby")
     public void DiscoverDevices() {
@@ -357,37 +319,21 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         });
     }
 
-    @SimpleFunction(description = "Send data to a particular device")
-    public void SendData(String address, int port, String msg) {
-        if(this.isRegistered) {
-
-        }
-    }
-
     @SimpleFunction(description = "Receive data from a particular device")
     public void ReceiveData(String address, int port) {
 
-    }
-
-    @SimpleFunction(description = "Registers device to the group owner")
-    public void RegisterDevice(int port) {
-        if(this.isConnected) {
-            return;
-        }
     }
 
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")
     public void RequestPeers() {
     }
 
-    @SimpleFunction(description = "Start accepting new connections")
+    @SimpleFunction(description = "Start Group Owner Server")
     public void StartGOServer() {
         if(this.IsGroupOwner()) {
             try {
                 this.groupServer = new WifiDirectGroupServer(this, null, WifiDirectUtil.defaultGroupServerPort);
                 AsynchUtil.runAsynchronously(this.groupServer);
-                this.isAccepting = true;
-                this.Trigger("GO Server has started");
             } catch (IOException e) {
                 wifiDirectError("StartGOServer",
                                 ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
@@ -396,20 +342,17 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         }
     }
 
-    @SimpleFunction(description = "Stop accepting new connection")
+    @SimpleFunction(description = "Stop Group Owner Server")
     public void StopGOServer(){
-        if(this.isAccepting) {
-            this.groupServer.stop();
-            this.isAccepting = false;
-        }
+        this.groupServer.stop();
     }
 
     @SimpleFunction(description = "Start the client and connect to the Group Owner in the specified port")
     public void StartClient(int port) {
         try {
-            this.client = new WifiDirectClient(this, this.mConnectionInfo.groupOwnerAddress, port);
-            this.client.setHandler(this.handler);
-            AsynchUtil.runAsynchronously(this.client);
+            this.controlClient = new WifiDirectControlClient(this, this.mConnectionInfo.groupOwnerAddress, port);
+            this.controlClient.setHandler(this.handler);
+            AsynchUtil.runAsynchronously(this.controlClient);
         } catch (Exception e) {
             wifiDirectError("StartClient",
                             ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
@@ -419,9 +362,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     @SimpleFunction(description = "Stop the client")
     public void StopClient() {
-        if(this.isRegistered) {
-            this.client.stop();
-        }
+        this.controlClient.stop();
     }
 
     @Override
@@ -438,8 +379,8 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.availableDevices = wifiP2pDeviceList.getDeviceList();
     }
 
-    public void setPeers(Collection<WifiP2pDevice> peers) {
-        this.mPeers = peers;
+    public void setPeers(Collection<WifiDirectPeer> peers) {
+        this.availablePeers = peers;
     }
 
     public void setDevice(WifiP2pDevice device) {
@@ -460,15 +401,15 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     public void setIsAvailable(boolean isAvailable) {
-        this.isAvailable = isAvailable;
+        return;
     }
 
     public void setIsConnected(boolean isConnected) {
-        this.isConnected = isConnected;
+        return;
     }
 
     public void setIsRegistered(boolean isRegistered) {
-        this.isRegistered = isRegistered;
+        return;
     }
 
     public void wifiDirectError(String functionName, int errorCode, Object... args) {

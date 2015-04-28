@@ -6,6 +6,8 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+import java.net.SocketAddress;
+
 /**
  * Java NIO Server Handler for WifiDirect Component
  *
@@ -23,14 +25,13 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(final ChannelHandlerContext context) {
-        String client_port = context.channel().remoteAddress().toString().substring(1);
-        final String client = client_port.split(":")[0];
-        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, client, PeerMessage.CTRL_CONNECTED);
+        final String clientIP = this.parseIp(context.channel().remoteAddress());
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, clientIP, PeerMessage.CTRL_CONNECTED);
         final ChannelFuture f = context.channel().writeAndFlush(msg.toString());
         f.addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                WifiDirectGroupServerHandler.this.server.peerConnected(client);
+                WifiDirectGroupServerHandler.this.server.peerConnected(clientIP);
             }
         });
     }
@@ -49,5 +50,9 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         this.server.trigger(cause.toString());
         ctx.close();
+    }
+
+    public String parseIp(SocketAddress socketAddress) {
+        return socketAddress.toString().substring(1).split(":")[0];
     }
 }
