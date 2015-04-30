@@ -53,7 +53,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     /* Network layer for WifiDirect access */
     private WifiP2pManager manager;
     private WifiP2pManager.Channel channel;
-    private BroadcastReceiver receiver;
 
     /* WifiDirect Info for this Device */
     private WifiP2pDevice mDevice;
@@ -62,10 +61,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private WifiP2pInfo mConnectionInfo;
 
     /* Application Layer Control Planes */
+    private WifiDirectBroadcastReceiver receiver;
     private WifiDirectGroupServer groupServer;
     private WifiDirectControlClient controlClient;
-    private Collection<WifiP2pDevice> availableDevices;
-    private Collection<WifiDirectPeer> availablePeers;
 
     private Handler handler;
     private Status status;
@@ -253,15 +251,19 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleProperty(description = "Returns the IP address of the device",
                     category = PropertyCategory.BEHAVIOR)
     public String DeviceIPAddress() {
-        return this.controlClient.getHostAddress().toString();
+        if(this.controlClient != null) {
+            return this.controlClient.getHostAddress().toString();
+        }
+        return WifiDirectUtil.defaultDeviceIPAddress;
     }
 
     @SimpleProperty(description = "All the available devices near you",
                     category = PropertyCategory.BEHAVIOR)
     public List<String> AvailableDevices() {
         List<String> availableDevices = new ArrayList<String>();
-        if(this.availableDevices != null) {
-            for (WifiP2pDevice device : this.availableDevices) {
+        Collection<WifiP2pDevice> devices = this.receiver.getAvailableDevices();
+        if(devices != null) {
+            for (WifiP2pDevice device : devices) {
                 availableDevices.add(WifiDirectUtil.deviceToString(device));
             }
         }
@@ -417,14 +419,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @Override
     public void onDestroy() {
 
-    }
-
-    public void setAvailableDevices(WifiP2pDeviceList wifiP2pDeviceList) {
-        this.availableDevices = wifiP2pDeviceList.getDeviceList();
-    }
-
-    public void setPeers(Collection<WifiDirectPeer> peers) {
-        this.availablePeers = peers;
     }
 
     public void setDevice(WifiP2pDevice device) {

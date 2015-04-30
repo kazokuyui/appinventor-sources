@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.*;
 
+import java.util.Collection;
+
 import static android.net.wifi.p2p.WifiP2pManager.*;
 
 /**
@@ -19,6 +21,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
     private WifiP2pManager manager;
     private Channel channel;
     private WifiDirectP2P main;
+    private Collection<WifiP2pDevice> availableDevices;
 
     public WifiDirectBroadcastReceiver(WifiP2pManager manager, Channel channel, WifiDirectP2P main) {
         super();
@@ -62,7 +65,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
 
     @Override
     public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
-        this.main.setAvailableDevices(wifiP2pDeviceList);
+        this.setAvailableDevices(wifiP2pDeviceList);
         this.main.DevicesAvailable();
     }
 
@@ -75,5 +78,13 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
     public void onGroupInfoAvailable(WifiP2pGroup wifiP2pGroup) {
         this.main.setP2PGroup(wifiP2pGroup);
         this.main.GroupInfoAvailable();
+    }
+
+    public Collection<WifiP2pDevice> getAvailableDevices() {
+        return availableDevices;
+    }
+
+    public void setAvailableDevices(WifiP2pDeviceList availableDevices) {
+        this.availableDevices = availableDevices.getDeviceList();
     }
 }
