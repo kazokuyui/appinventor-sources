@@ -37,18 +37,16 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
             }
         }
         else if(WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
-            if (manager == null) {
-                return;
-            }
-
+            if (manager == null) return;
             NetworkInfo networkInfo = intent.getParcelableExtra(EXTRA_NETWORK_INFO);
+
+            if (networkInfo.isAvailable()) {
+                this.main.AvailableToNetwork();
+            }
 
             if (networkInfo.isConnected()) {
                 this.main.ConnectedToNetwork();
             }
-
-            this.main.setIsConnected(networkInfo.isConnected());
-            this.main.setIsAvailable(networkInfo.isAvailable());
         }
         else if(WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             this.main.setDevice((WifiP2pDevice) intent.getParcelableExtra(EXTRA_WIFI_P2P_DEVICE));

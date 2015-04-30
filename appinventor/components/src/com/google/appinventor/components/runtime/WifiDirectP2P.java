@@ -14,12 +14,11 @@ import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static com.google.appinventor.components.runtime.WifiDirectP2P.Status.*;
 
 /**
  * A peer-to-peer(p2p) component via WiFi Direct
@@ -45,6 +44,11 @@ import java.util.List;
 @SimpleObject
 public class WifiDirectP2P extends AndroidNonvisibleComponent implements Component, OnDestroyListener, Deleteable {
     public String TAG;
+    public enum Status {
+        Idle, Available, Unavailable,
+        Invited, NetworkConnected, Connected,
+        Registered, Ready, Failed;
+    }
 
     /* Network layer for WifiDirect access */
     private WifiP2pManager manager;
@@ -64,6 +68,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private Collection<WifiDirectPeer> availablePeers;
 
     private Handler handler;
+    private Status status;
 
     public WifiDirectP2P(ComponentContainer container) {
         this(container.$form(), "WifiDirectP2P");
@@ -108,24 +113,34 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "GroupInfoAvailable");
     }
 
+    @SimpleEvent(description = "This device is available; Triggered by DiscoverDevices")
+    public void AvailableToNetwork() {
+        this.setStatus(Available);
+        EventDispatcher.dispatchEvent(this, "AvailableNetwork");
+    }
+
     @SimpleEvent(description = "This device is connected; Triggered by Connect")
     public void ConnectedToNetwork() {
+        this.setStatus(NetworkConnected);
         EventDispatcher.dispatchEvent(this, "ConnectedToNetwork");
     }
 
     @SimpleEvent(description = "Channel is disconnected to the network; Triggered by Disconnect")
     public void DisconnectedToNetwork() {
+        this.setStatus(Available);
         EventDispatcher.dispatchEvent(this, "DisconnectedToNetwork");
     }
 
     /* Client Application Layer Events */
     @SimpleEvent(description = "Device connected to the Group Owner Server; Triggered by ControlClient.peerConnected")
     public void DeviceConnected(String ipAddress) {
+        this.setStatus(Connected);
         EventDispatcher.dispatchEvent(this, "DeviceConnected", ipAddress);
     }
 
     @SimpleEvent(description = "Device is now registered to the Group Owner Server; Triggered by ControlClient.peerRegistered")
     public void DeviceRegistered(String client) {
+        this.setStatus(Registered);
         EventDispatcher.dispatchEvent(this, "DeviceRegistered", client);
     }
 
@@ -204,7 +219,26 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleProperty(description = "Returns status of the device",
                     category = PropertyCategory.BEHAVIOR)
     public String DeviceStatus() {
-        return WifiDirectUtil.getDeviceStatus(this.mDevice);
+        switch (this.status) {
+            case Available:
+                return "Available";
+            case Unavailable:
+                return "Unavailable";
+            case Invited:
+                return "Invited";
+            case NetworkConnected:
+                return "Network Connected";
+            case Connected:
+                return "Connected";
+            case Registered:
+                return "Registered";
+            case Ready:
+                return "Ready";
+            case Failed:
+                return "Failed";
+            default:
+                return "Unknown";
+        }
     }
 
     @SimpleProperty(description = "Returns MAC address of the device",
@@ -410,16 +444,8 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.mGroupOwner = go;
     }
 
-    public void setIsAvailable(boolean isAvailable) {
-        return;
-    }
-
-    public void setIsConnected(boolean isConnected) {
-        return;
-    }
-
-    public void setIsRegistered(boolean isRegistered) {
-        return;
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
     public void wifiDirectError(String functionName, int errorCode, Object... args) {
