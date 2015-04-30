@@ -34,7 +34,6 @@ public class WifiDirectGroupServer implements Runnable {
     private WifiDirectP2P p2p;
     private InetAddress hostAddress;
     private int port;
-    private SocketAddress serverSocket;
 
     private Collection<WifiDirectPeer> activePeers;
 
@@ -83,12 +82,17 @@ public class WifiDirectGroupServer implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            // Shut down all event loops to terminate all threads.
             this.bossGroup.shutdownGracefully();
             this.workerGroup.shutdownGracefully();
         }
     }
 
+    public void stop() {
+        this.bossGroup.shutdownGracefully();
+        this.workerGroup.shutdownGracefully();
+    }
+
+    /* Server Events */
     public void serverStarted() {
         final String ipAddress = this.hostAddress.getHostAddress();
         this.handler.post(new Runnable() {
@@ -107,15 +111,7 @@ public class WifiDirectGroupServer implements Runnable {
         this.p2p.ConnectionRegistered(peer.toString());
     }
 
-    public void stop() {
-        this.bossGroup.shutdownGracefully();
-        this.workerGroup.shutdownGracefully();
-    }
-
-    public Collection<WifiDirectPeer> getActivePeers() {
-        return this.activePeers;
-    }
-
+    /* Setters and Getters */
     public SslContext initiateSsl() {
         if (WifiDirectUtil.SSL) {
             try {
@@ -126,26 +122,14 @@ public class WifiDirectGroupServer implements Runnable {
                 return null;
             }
         }
-
         return null;
-    }
-
-    public SocketAddress getServerSocket() {
-        return this.serverSocket;
-    }
-
-    public void setServerSocket(SocketAddress socketAddress) {
-        this.serverSocket = socketAddress;
-    }
-
-    public Handler getHandler() {
-        return handler;
     }
 
     public void setHandler(Handler handler) {
         this.handler = handler;
     }
 
+    /* For testing purposes */
     public void trigger(String msg) {
         this.p2p.Trigger(msg);
     }

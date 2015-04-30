@@ -21,12 +21,14 @@ import java.net.InetAddress;
 
 public class WifiDirectControlClient implements Runnable {
     private WifiDirectP2P p2p;
-    private InetAddress hostAddress;
-    private int port;
-    private EventLoopGroup group;
     private int state;
     private WifiDirectPeer mPeer;
     private Handler handler;
+
+    private InetAddress hostAddress;
+    private int port;
+
+    private EventLoopGroup group;
 
     public WifiDirectControlClient(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
@@ -76,20 +78,7 @@ public class WifiDirectControlClient implements Runnable {
         this.group.shutdownGracefully();
     }
 
-    public SslContext initiateSsl() {
-        if (WifiDirectUtil.SSL) {
-            try {
-                return SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        return null;
-    }
-
+    /* Client events */
     public void peerConnected(final String ipAddress) {
         this.handler.post(new Runnable() {
             @Override
@@ -108,10 +97,26 @@ public class WifiDirectControlClient implements Runnable {
         });
     }
 
+    /* Setters and Getters */
+    public SslContext initiateSsl() {
+        if (WifiDirectUtil.SSL) {
+            try {
+                return SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        return null;
+    }
+
     public void setHandler(Handler uiHandler) {
         this.handler = uiHandler;
     }
 
+    /* For testing purposes */
     public void trigger(String msg) {
         this.p2p.Trigger(msg);
     }
