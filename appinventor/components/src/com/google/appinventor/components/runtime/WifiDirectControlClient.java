@@ -116,6 +116,10 @@ public class WifiDirectControlClient implements Runnable {
         this.handler = uiHandler;
     }
 
+    public InetAddress getHostAddress() {
+        return this.hostAddress;
+    }
+
     /* For testing purposes */
     public void trigger(String msg) {
         this.p2p.Trigger(msg);

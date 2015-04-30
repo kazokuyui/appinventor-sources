@@ -253,7 +253,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleProperty(description = "Returns the IP address of the device",
                     category = PropertyCategory.BEHAVIOR)
     public String DeviceIPAddress() {
-        return WifiDirectUtil.defaultDeviceIPAddress;
+        return this.controlClient.getHostAddress().toString();
     }
 
     @SimpleProperty(description = "All the available devices near you",
