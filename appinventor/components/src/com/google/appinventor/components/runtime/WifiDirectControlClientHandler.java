@@ -1,6 +1,8 @@
 package com.google.appinventor.components.runtime;
 
 import com.google.appinventor.components.runtime.util.PeerMessage;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
@@ -27,13 +29,14 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
         if(response.getType() == PeerMessage.CONTROL_DATA) {
             if(response.getHeader().equals(PeerMessage.CTRL_CONNECTED)) {
                 this.client.peerConnected(response.getData());
+                PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                    PeerMessage.CTRL_REGISTER,
+                                                    this.client.getmPeer().toString());
+                ctx.channel().writeAndFlush(reply.toString());
             }
             else if(response.getHeader().equals(PeerMessage.CTRL_REGISTERED)) {
-                this.client.peerRegistered(new WifiDirectPeer("wow", "wow", "wow", 4545));
+                this.client.peerRegistered(Integer.parseInt(response.getData()));
             }
-        }
-        else if(response.getType() == PeerMessage.PEER_DATA) {
-            //handle peer data
         }
     }
 

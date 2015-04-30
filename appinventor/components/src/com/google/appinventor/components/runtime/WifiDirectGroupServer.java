@@ -28,14 +28,14 @@ import java.util.Collection;
 
 public class WifiDirectGroupServer implements Runnable {
     private WifiDirectP2P p2p;
+    private Handler handler;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
+
     private InetAddress hostAddress;
     private int port;
 
     private Collection<WifiDirectPeer> activePeers;
-
-    private EventLoopGroup bossGroup;
-    private EventLoopGroup workerGroup;
-    private Handler handler;
 
     public WifiDirectGroupServer(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
@@ -88,6 +88,12 @@ public class WifiDirectGroupServer implements Runnable {
         this.workerGroup.shutdownGracefully();
     }
 
+    public void registerPeer(WifiDirectPeer peer) {
+        peer.setId(this.activePeers.size() + 1);
+        this.activePeers.add(peer);
+        this.peerRegistered(peer);
+    }
+
     /* Server Events */
     public void serverStarted() {
         final String ipAddress = this.hostAddress.getHostAddress();
@@ -104,7 +110,7 @@ public class WifiDirectGroupServer implements Runnable {
     }
 
     public void peerRegistered(WifiDirectPeer peer) {
-        this.p2p.ConnectionRegistered(peer.toString());
+        this.p2p.ConnectionRegistered(peer.getName());
     }
 
     /* Setters and Getters */

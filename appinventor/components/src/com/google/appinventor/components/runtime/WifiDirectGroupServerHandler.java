@@ -37,8 +37,18 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext channelHandlerContext, Object msg) {
-
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        PeerMessage response = this.parseResponse((String) msg);
+        if(response.getType() == PeerMessage.CONTROL_DATA) {
+            if(response.getHeader().equals(PeerMessage.CTRL_REGISTER)) {
+                WifiDirectPeer peer = new WifiDirectPeer(response.getData());
+                this.server.registerPeer(peer);
+                PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                    PeerMessage.CTRL_REGISTERED,
+                                                    Integer.toString(peer.getId()));
+                ctx.channel().writeAndFlush(reply.toString());
+            }
+        }
     }
 
     @Override
@@ -54,5 +64,10 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     public String parseIp(SocketAddress socketAddress) {
         return socketAddress.toString().substring(1).split(":")[0].trim();
+    }
+
+    public PeerMessage parseResponse(String response) {
+        String[] separated = response.split("/");
+        return new PeerMessage(Integer.parseInt(separated[0]), separated[1], separated[2]);
     }
 }

@@ -12,21 +12,28 @@ import java.util.ArrayList;
  */
 
 public class WifiDirectPeer {
+    private int id;
     private String name;
     private String macAddress;
     private String ipAddress;
     private int port;
 
-    public WifiDirectPeer(String name, String macAddress, String ipAddress, int port) {
-        this.name = name;
-        this.macAddress = macAddress;
-        this.ipAddress = ipAddress;
-        this.port = port;
+    public WifiDirectPeer(String rawPeer) {
+        String[] parts = rawPeer.split("@");
+        String[] name_id = parts[0].split(":");
+        this.name = name_id[0];
+        this.id = Integer.parseInt(name_id[1]);
+        this.macAddress = parts[1];
+        String[] ip_port = parts[2].split(":");
+        this.ipAddress = ip_port[0];
+        this.port = Integer.parseInt(ip_port[1]);
     }
 
-    public WifiDirectPeer(WifiP2pDevice device) {
+    public WifiDirectPeer(WifiP2pDevice device, int port) {
         this.name = device.deviceName;
         this.macAddress = device.deviceAddress;
+        this.port = port;
+        this.id = 0;
     }
 
     public String getName() {
@@ -35,14 +42,6 @@ public class WifiDirectPeer {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getMacAddress() {
-        return macAddress;
-    }
-
-    public void setMacAddress(String macAddress) {
-        this.macAddress = macAddress;
     }
 
     public String getIpAddress() {
@@ -61,7 +60,15 @@ public class WifiDirectPeer {
         this.port = port;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String toString() {
-        return this.name+"@"+this.ipAddress;
+        return this.name+":"+this.id+"@"+this.macAddress+"@"+this.ipAddress+":"+this.port;
     }
 }

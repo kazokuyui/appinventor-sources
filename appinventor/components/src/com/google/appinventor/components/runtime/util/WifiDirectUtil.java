@@ -14,7 +14,8 @@ public class WifiDirectUtil {
     public static final String defaultDeviceMACAddress = "Unknown";
     public static final String defaultDeviceIPAddress = "0.0.0.0";
     public static final String defaultGroupName = "MyP2PGroup";
-    public static final int defaultGroupServerPort = 3000;
+    public static final int defaultServerPort = 4545;
+    public static final int groupServerPort = 3000;
     public static final int controlBufferSize = 8192;
 
     public static boolean SSL = System.getProperty("ssl") != null;
@@ -22,27 +23,4 @@ public class WifiDirectUtil {
     public static String deviceToString(WifiP2pDevice device) {
         return "[" + device.deviceName + "] " + device.deviceAddress;
     }
-
-    public static String getDeviceStatus(WifiP2pDevice device){
-        int status = device.status;
-        switch (status) {
-            case WifiP2pDevice.AVAILABLE:
-                return "Available";
-            case WifiP2pDevice.INVITED:
-                return "Invited";
-            case WifiP2pDevice.CONNECTED:
-                return "Network Connected";
-            case WifiP2pDevice.FAILED:
-                return "Failed";
-            case WifiP2pDevice.UNAVAILABLE:
-                return "Unavailable";
-            default:
-                return "Unknown: " + Integer.toString(status);
-        }
-    }
-
-    public static String getDeviceFormat() {
-        return "[deviceName] deviceMACAddress";
-    }
-
 }

@@ -136,9 +136,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     @SimpleEvent(description = "Device is now registered to the Group Owner Server; Triggered by ControlClient.peerRegistered")
-    public void DeviceRegistered(String client) {
+    public void DeviceRegistered(int deviceId) {
         this.setStatus(Registered);
-        EventDispatcher.dispatchEvent(this, "DeviceRegistered", client);
+        EventDispatcher.dispatchEvent(this, "DeviceRegistered", deviceId);
     }
 
     @SimpleEvent(description = "Peers information is available from the Group Owner Server")
@@ -376,7 +376,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
             try {
                 this.groupServer = new WifiDirectGroupServer(this,
                                                              this.mConnectionInfo.groupOwnerAddress,
-                                                             WifiDirectUtil.defaultGroupServerPort);
+                                                             WifiDirectUtil.groupServerPort);
                 this.groupServer.setHandler(this.handler);
                 AsynchUtil.runAsynchronously(this.groupServer);
             } catch (IOException e) {
@@ -397,6 +397,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         try {
             this.controlClient = new WifiDirectControlClient(this, this.mConnectionInfo.groupOwnerAddress, port);
             this.controlClient.setHandler(this.handler);
+            this.controlClient.setmPeer(new WifiDirectPeer(this.mDevice, WifiDirectUtil.defaultServerPort));
             AsynchUtil.runAsynchronously(this.controlClient);
         } catch (Exception e) {
             wifiDirectError("StartClient",

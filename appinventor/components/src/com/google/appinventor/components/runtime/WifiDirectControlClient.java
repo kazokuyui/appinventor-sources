@@ -1,6 +1,7 @@
 package com.google.appinventor.components.runtime;
 
 import android.os.Handler;
+import com.google.appinventor.components.runtime.util.PeerMessage;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -21,9 +22,9 @@ import java.net.InetAddress;
 
 public class WifiDirectControlClient implements Runnable {
     private WifiDirectP2P p2p;
-    private int state;
-    private WifiDirectPeer mPeer;
     private Handler handler;
+    private String status;
+    private WifiDirectPeer mPeer;
 
     private InetAddress hostAddress;
     private int port;
@@ -80,6 +81,8 @@ public class WifiDirectControlClient implements Runnable {
 
     /* Client events */
     public void peerConnected(final String ipAddress) {
+        this.status = PeerMessage.CTRL_CONNECTED;
+        this.mPeer.setIpAddress(ipAddress);
         this.handler.post(new Runnable() {
             @Override
             public void run() {
@@ -88,11 +91,13 @@ public class WifiDirectControlClient implements Runnable {
         });
     }
 
-    public void peerRegistered(final WifiDirectPeer peer) {
+    public void peerRegistered(final int id) {
+        this.status = PeerMessage.CTRL_REGISTERED;
+        this.mPeer.setId(id);
         this.handler.post(new Runnable() {
             @Override
             public void run() {
-                WifiDirectControlClient.this.p2p.DeviceRegistered(peer.toString());
+                WifiDirectControlClient.this.p2p.DeviceRegistered(id);
             }
         });
     }
@@ -118,6 +123,22 @@ public class WifiDirectControlClient implements Runnable {
 
     public InetAddress getHostAddress() {
         return this.hostAddress;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setmPeer(WifiDirectPeer wifiDirectPeer) {
+        this.mPeer = wifiDirectPeer;
+    }
+
+    public WifiDirectPeer getmPeer() {
+        return mPeer;
     }
 
     /* For testing purposes */
