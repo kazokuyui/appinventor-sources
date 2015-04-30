@@ -26,7 +26,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(final ChannelHandlerContext context) {
         final String clientIP = this.parseIp(context.channel().remoteAddress());
-        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, clientIP, PeerMessage.CTRL_CONNECTED);
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, PeerMessage.CTRL_CONNECTED, clientIP);
         final ChannelFuture f = context.channel().writeAndFlush(msg.toString());
         f.addListener(new ChannelFutureListener() {
             @Override
@@ -53,6 +53,6 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     public String parseIp(SocketAddress socketAddress) {
-        return socketAddress.toString().substring(1).split(":")[0];
+        return socketAddress.toString().substring(1).split(":")[0].trim();
     }
 }

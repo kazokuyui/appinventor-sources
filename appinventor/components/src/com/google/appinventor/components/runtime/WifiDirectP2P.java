@@ -14,6 +14,9 @@ import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -132,6 +135,11 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     /* Server Application Layer Events */
+    @SimpleEvent(description = "GOServer has now started and accepting connection; Triggered by StartGOServer")
+    public void GOServerStarted(String ipAddress) {
+        EventDispatcher.dispatchEvent(this, "GOServerStarted", ipAddress);
+    }
+
     @SimpleEvent(description = "Connection of a peer is accepted by the Group Owner Server; Triggered by GroupServer.peerConnected")
     public void ConnectionAccepted(String ipAddress) {
         EventDispatcher.dispatchEvent(this, "ConnectionAccepted", ipAddress);
@@ -275,7 +283,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         return this.mConnectionInfo != null && this.mConnectionInfo.isGroupOwner;
     }
 
-
     @SimpleFunction(description = "Scan all devices nearby")
     public void DiscoverDevices() {
         this.manager.discoverPeers(this.channel, new WifiP2pManager.ActionListener() {
@@ -332,7 +339,10 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     public void StartGOServer() {
         if(this.IsGroupOwner()) {
             try {
-                this.groupServer = new WifiDirectGroupServer(this, null, WifiDirectUtil.defaultGroupServerPort);
+                this.groupServer = new WifiDirectGroupServer(this,
+                                                             this.mConnectionInfo.groupOwnerAddress,
+                                                             WifiDirectUtil.defaultGroupServerPort);
+                this.groupServer.setHandler(this.handler);
                 AsynchUtil.runAsynchronously(this.groupServer);
             } catch (IOException e) {
                 wifiDirectError("StartGOServer",

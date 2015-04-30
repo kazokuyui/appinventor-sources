@@ -67,6 +67,7 @@ public class TranslationComponentEvents {
     map.put("TouchUp", MESSAGES.TouchUpEvents());
     map.put("Touched", MESSAGES.TouchedEvents());
     map.put("AfterScan", MESSAGES.AfterScanEvents());
+    map.put("GOServerStarted", MESSAGES.GOServerStartedEvents());
     map.put("ConnectionAccepted", MESSAGES.ConnectionAcceptedEvents());
     map.put("Click", MESSAGES.ClickEvents());
     map.put("GotFocus", MESSAGES.GotFocusEvents());

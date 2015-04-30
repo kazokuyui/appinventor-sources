@@ -1,6 +1,6 @@
 package com.google.appinventor.components.runtime;
 
-import com.google.appinventor.components.runtime.util.ErrorMessages;
+import android.os.Handler;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 import com.google.gson.Gson;
 import io.netty.bootstrap.ServerBootstrap;
@@ -14,10 +14,14 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Java NIO Server for WifiDirect Component
@@ -30,10 +34,13 @@ public class WifiDirectGroupServer implements Runnable {
     private WifiDirectP2P p2p;
     private InetAddress hostAddress;
     private int port;
-    private ArrayList<WifiDirectPeer> activePeers;
+    private SocketAddress serverSocket;
+
+    private Collection<WifiDirectPeer> activePeers;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
+    private Handler handler;
 
     public WifiDirectGroupServer(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
@@ -70,8 +77,8 @@ public class WifiDirectGroupServer implements Runnable {
                 }
             });
 
-            // Start the server.
             ChannelFuture f = b.bind(this.hostAddress, this.port).sync();
+            this.serverStarted();
             f.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -80,6 +87,16 @@ public class WifiDirectGroupServer implements Runnable {
             this.bossGroup.shutdownGracefully();
             this.workerGroup.shutdownGracefully();
         }
+    }
+
+    public void serverStarted() {
+        final String ipAddress = this.hostAddress.getHostAddress();
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectGroupServer.this.p2p.GOServerStarted(ipAddress);
+            }
+        });
     }
 
     public void peerConnected(String peer) {
@@ -95,12 +112,8 @@ public class WifiDirectGroupServer implements Runnable {
         this.workerGroup.shutdownGracefully();
     }
 
-    public ArrayList<WifiDirectPeer> getActivePeers() {
+    public Collection<WifiDirectPeer> getActivePeers() {
         return this.activePeers;
-    }
-
-    public String getActivePeersInJSON() {
-        return new Gson().toJson(this.activePeers);
     }
 
     public SslContext initiateSsl() {
@@ -117,9 +130,20 @@ public class WifiDirectGroupServer implements Runnable {
         return null;
     }
 
-    private String getAddress(String remoteAddress) {
-        String[] parts = remoteAddress.split(":");
-        return parts[0];
+    public SocketAddress getServerSocket() {
+        return this.serverSocket;
+    }
+
+    public void setServerSocket(SocketAddress socketAddress) {
+        this.serverSocket = socketAddress;
+    }
+
+    public Handler getHandler() {
+        return handler;
+    }
+
+    public void setHandler(Handler handler) {
+        this.handler = handler;
     }
 
     public void trigger(String msg) {

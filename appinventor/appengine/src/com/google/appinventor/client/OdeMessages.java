@@ -3799,6 +3799,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String AfterScanEvents();
 
+  @DefaultMessage("GOServerStarted")
+  @Description("")
+  String GOServerStartedEvents();
+
   @DefaultMessage("ConnectionAccepted")
   @Description("")
   String ConnectionAcceptedEvents();

@@ -13,10 +13,10 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * @author erbunao@up.edu.ph (earle)
  */
 
-public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
+public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter {
     private WifiDirectControlClient client;
 
-    public WifiDirectClientHandler(WifiDirectControlClient client) {
+    public WifiDirectControlClientHandler(WifiDirectControlClient client) {
         super();
         this.client = client;
     }
@@ -25,10 +25,10 @@ public class WifiDirectClientHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         PeerMessage response = this.parseResponse((String) msg);
         if(response.getType() == PeerMessage.CONTROL_DATA) {
-            if(response.getData().equals(PeerMessage.CTRL_CONNECTED)) {
-                this.client.peerConnected(response.getHeader());
+            if(response.getHeader().equals(PeerMessage.CTRL_CONNECTED)) {
+                this.client.peerConnected(response.getData());
             }
-            else if(response.getData().equals(PeerMessage.CTRL_REGISTERED)) {
+            else if(response.getHeader().equals(PeerMessage.CTRL_REGISTERED)) {
                 this.client.peerRegistered(new WifiDirectPeer("wow", "wow", "wow", 4545));
             }
         }

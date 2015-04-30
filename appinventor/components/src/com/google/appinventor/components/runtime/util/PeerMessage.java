@@ -13,14 +13,8 @@ public class PeerMessage {
     public static final String CTRL_REGISTERED = "REGISTERED";
 
     private int type;
-    private String header; //optional
+    private String header;
     private String data;
-
-    public PeerMessage(int type, String data) {
-        this.type = type;
-        this.data = data;
-        this.header = " ";
-    }
 
     public PeerMessage(int type, String header, String data) {
         this.type = type;
@@ -53,6 +47,6 @@ public class PeerMessage {
     }
 
     public String toString() {
-        return this.type + "/" + this.getHeader() + "/" + this.data + "\r\n";
+        return this.getType() + "/" + this.getHeader() + "/" + this.getData() + "\r\n";
     }
 }

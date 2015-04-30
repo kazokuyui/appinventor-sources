@@ -59,7 +59,7 @@ public class WifiDirectControlClient implements Runnable {
                                                              Delimiters.lineDelimiter()));
                     p.addLast(new StringEncoder());
                     p.addLast(new StringDecoder());
-                    p.addLast(new WifiDirectClientHandler(WifiDirectControlClient.this));
+                    p.addLast(new WifiDirectControlClientHandler(WifiDirectControlClient.this));
                 }
             });
 
@@ -90,11 +90,11 @@ public class WifiDirectControlClient implements Runnable {
         return null;
     }
 
-    public void peerConnected(final String ip) {
+    public void peerConnected(final String ipAddress) {
         this.handler.post(new Runnable() {
             @Override
             public void run() {
-                WifiDirectControlClient.this.p2p.DeviceConnected(ip);
+                WifiDirectControlClient.this.p2p.DeviceConnected(ipAddress);
             }
         });
     }
