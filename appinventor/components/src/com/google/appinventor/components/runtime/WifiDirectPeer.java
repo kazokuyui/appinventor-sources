@@ -21,10 +21,11 @@ public class WifiDirectPeer {
     public WifiDirectPeer(String rawPeer) {
         String[] parts = rawPeer.split("@");
         String[] name_id = parts[0].split(":");
+        String[] ip_port = parts[2].split(":");
+
         this.name = name_id[0];
         this.id = Integer.parseInt(name_id[1]);
         this.macAddress = parts[1];
-        String[] ip_port = parts[2].split(":");
         this.ipAddress = ip_port[0];
         this.port = Integer.parseInt(ip_port[1]);
     }

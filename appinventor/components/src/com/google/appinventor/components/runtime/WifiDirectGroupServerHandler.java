@@ -48,6 +48,12 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
                                                     Integer.toString(peer.getId()));
                 ctx.channel().writeAndFlush(reply.toString());
             }
+            else if(response.getHeader().equals(PeerMessage.CTRL_REQUEST_PEER)) {
+                PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                    PeerMessage.CTRL_PEERS_LIST,
+                                                    this.server.getPeersList());
+                ctx.channel().writeAndFlush(reply.toString());
+            }
         }
     }
 

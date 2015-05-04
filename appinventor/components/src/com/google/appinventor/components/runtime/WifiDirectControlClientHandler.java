@@ -1,10 +1,10 @@
 package com.google.appinventor.components.runtime;
 
 import com.google.appinventor.components.runtime.util.PeerMessage;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Handler implementation for the echo client.  It initiates the ping-pong
@@ -37,6 +37,9 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
             else if(response.getHeader().equals(PeerMessage.CTRL_REGISTERED)) {
                 this.client.peerRegistered(Integer.parseInt(response.getData()));
             }
+            else if(response.getHeader().equals(PeerMessage.CTRL_PEERS_LIST)) {
+                this.client.peersAvailable(this.getPeersList(response.getData()));
+            }
         }
     }
 
@@ -51,8 +54,29 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
         ctx.close();
     }
 
+    public void requestPeers(Channel serverChannel) {
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                          PeerMessage.CTRL_REQUEST_PEER,
+                                          Integer.toString(this.client.getmPeer().getId()));
+        serverChannel.writeAndFlush(msg.toString());
+    }
+
     public PeerMessage parseResponse(String response) {
         String[] separated = response.split("/");
         return new PeerMessage(Integer.parseInt(separated[0]), separated[1], separated[2]);
+    }
+
+    public Collection<WifiDirectPeer> getPeersList(String rawList) {
+        Collection<WifiDirectPeer> peersList = new ArrayList<WifiDirectPeer>();
+        String[] rawPeers = rawList.split(",");
+
+        for(String peer : rawPeers) {
+            WifiDirectPeer newPeer = new WifiDirectPeer(peer);
+            if(newPeer.getId() != this.client.getmPeer().getId()) {
+                peersList.add(newPeer);
+            }
+        }
+
+        return peersList;
     }
 }

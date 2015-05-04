@@ -1,5 +1,6 @@
 package com.google.appinventor.components.runtime;
 
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Handler;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 import io.netty.bootstrap.ServerBootstrap;
@@ -129,6 +130,19 @@ public class WifiDirectGroupServer implements Runnable {
 
     public void setHandler(Handler handler) {
         this.handler = handler;
+    }
+
+    public String getPeersList() {
+        String peerList = "";
+        if(!this.activePeers.isEmpty()) {
+            for (WifiDirectPeer peer : this.activePeers) {
+                peerList += peer+",";
+            }
+        }
+        else {
+            peerList = "NIL";
+        }
+        return peerList;
     }
 
     /* For testing purposes */

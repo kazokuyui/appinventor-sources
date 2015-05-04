@@ -272,8 +272,14 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleProperty(description = "All the available peers in the network",
                     category = PropertyCategory.BEHAVIOR)
     public List<String> AvailablePeers() {
-        List<String> peers = new ArrayList<String>();
-        return peers;
+        List<String> availablePeers = new ArrayList<String>();
+        Collection<WifiDirectPeer> peers = this.controlClient.getPeers();
+        if(peers != null) {
+            for(WifiDirectPeer peer : peers ) {
+                availablePeers.add(peer.toString());
+            }
+        }
+        return availablePeers;
     }
 
     @SimpleProperty(description = "Returns the name of the group",
@@ -368,6 +374,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")
     public void RequestPeers() {
+        if(this.status == Registered) {
+            this.controlClient.requestPeers();
+        }
     }
 
     @SimpleFunction(description = "Start Group Owner Server")

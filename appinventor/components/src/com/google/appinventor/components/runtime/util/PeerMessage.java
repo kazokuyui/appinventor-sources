@@ -7,12 +7,14 @@ package com.google.appinventor.components.runtime.util;
  * @author erbunao@up.edu.ph (earle)
  */
 public class PeerMessage {
-    public static final int PEER_DATA = 1001;
+    public static final int USER_DATA = 1001;
     public static final int CONTROL_DATA = 1002;
     public static final String CTRL_CONNECTED = "CONNECTED";
     public static final String CTRL_REGISTER = "REGISTER";
     public static final String CTRL_REGISTERED = "REGISTERED";
     public static final String CTRL_READY = "READY";
+    public static final String CTRL_REQUEST_PEER = "REQUEST_PEER";
+    public static final String CTRL_PEERS_LIST = "PEERS_LIST";
 
     private int type;
     private String header;

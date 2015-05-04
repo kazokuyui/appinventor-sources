@@ -19,15 +19,19 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Collection;
 
 public class WifiDirectControlClient implements Runnable {
     private WifiDirectP2P p2p;
     private Handler handler;
     private String status;
     private WifiDirectPeer mPeer;
+    private WifiDirectControlClientHandler clientHandler;
+    private Channel serverChannel;
 
     private InetAddress hostAddress;
     private int port;
+    private Collection<WifiDirectPeer> peers;
 
     private EventLoopGroup group;
 
@@ -36,6 +40,7 @@ public class WifiDirectControlClient implements Runnable {
         this.hostAddress = hostAddress;
         this.port = port;
         this.group = new NioEventLoopGroup();
+        this.clientHandler = new WifiDirectControlClientHandler(this);
     }
 
     public void run() {
@@ -62,17 +67,27 @@ public class WifiDirectControlClient implements Runnable {
                                                              Delimiters.lineDelimiter()));
                     p.addLast(new StringEncoder());
                     p.addLast(new StringDecoder());
-                    p.addLast(new WifiDirectControlClientHandler(WifiDirectControlClient.this));
+                    p.addLast(WifiDirectControlClient.this.clientHandler);
                 }
             });
 
             final ChannelFuture f = b.connect(this.hostAddress.getHostAddress(), this.port).sync();
+            f.addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                    WifiDirectControlClient.this.serverChannel = f.channel();
+                }
+            });
             f.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
             this.group.shutdownGracefully();
         }
+    }
+
+    public void requestPeers() {
+        this.clientHandler.requestPeers(this.serverChannel);
     }
 
     public void stop() {
@@ -98,6 +113,16 @@ public class WifiDirectControlClient implements Runnable {
             @Override
             public void run() {
                 WifiDirectControlClient.this.p2p.DeviceRegistered(id);
+            }
+        });
+    }
+
+    public void peersAvailable(Collection<WifiDirectPeer> newPeers) {
+        this.peers = newPeers;
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectControlClient.this.p2p.PeersAvailable();
             }
         });
     }
@@ -139,6 +164,10 @@ public class WifiDirectControlClient implements Runnable {
 
     public WifiDirectPeer getmPeer() {
         return mPeer;
+    }
+
+    public Collection<WifiDirectPeer> getPeers() {
+        return this.peers;
     }
 
     /* For testing purposes */
