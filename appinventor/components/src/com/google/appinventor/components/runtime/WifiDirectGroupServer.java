@@ -132,12 +132,6 @@ public class WifiDirectGroupServer implements Runnable {
     public void peersChanged() {
         PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, PeerMessage.CTRL_PEERS_CHANGE, " ");
         this.serverHandler.broadcastMessage(msg);
-        this.handler.post(new Runnable() {
-            @Override
-            public void run() {
-                WifiDirectGroupServer.this.p2p.PeersChanged();
-            }
-        });
     }
 
     /* Setters and Getters */

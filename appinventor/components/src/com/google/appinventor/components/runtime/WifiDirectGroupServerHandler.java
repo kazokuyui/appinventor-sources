@@ -35,14 +35,12 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
                 WifiDirectGroupServerHandler.this.server.peerConnected(clientIP);
-                WifiDirectGroupServerHandler.this.channels.add(context.channel());
-                WifiDirectGroupServerHandler.this.server.peersChanged();
             }
         });
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+    public void channelRead(final ChannelHandlerContext context, Object msg) {
         PeerMessage response = this.parseResponse((String) msg);
         if(response.getType() == PeerMessage.CONTROL_DATA) {
             if(response.getHeader().equals(PeerMessage.CTRL_REGISTER)) {
@@ -51,13 +49,20 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
                 PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
                                                     PeerMessage.CTRL_REGISTERED,
                                                     Integer.toString(peer.getId()));
-                ctx.channel().writeAndFlush(reply.toString());
+                ChannelFuture f = context.channel().writeAndFlush(reply.toString());
+                f.addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                        WifiDirectGroupServerHandler.this.channels.add(context.channel());
+                        WifiDirectGroupServerHandler.this.server.peersChanged();
+                    }
+                });
             }
             else if(response.getHeader().equals(PeerMessage.CTRL_REQUEST_PEER)) {
                 PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
                                                     PeerMessage.CTRL_PEERS_LIST,
                                                     this.server.getPeersList());
-                ctx.channel().writeAndFlush(reply.toString());
+                context.channel().writeAndFlush(reply.toString());
             }
         }
     }
@@ -74,9 +79,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     public void broadcastMessage(PeerMessage msg) {
-        for(Channel c : this.channels) {
-            c.writeAndFlush(msg.toString());
-        }
+        this.channels.writeAndFlush(msg.toString());
     }
 
     public String parseIp(SocketAddress socketAddress) {
