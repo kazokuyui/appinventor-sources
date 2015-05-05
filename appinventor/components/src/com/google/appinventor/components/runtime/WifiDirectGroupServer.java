@@ -2,6 +2,7 @@ package com.google.appinventor.components.runtime;
 
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Handler;
+import com.google.appinventor.components.runtime.util.PeerMessage;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -32,6 +33,7 @@ public class WifiDirectGroupServer implements Runnable {
     private Handler handler;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
+    WifiDirectGroupServerHandler serverHandler;
 
     private InetAddress hostAddress;
     private int port;
@@ -44,6 +46,7 @@ public class WifiDirectGroupServer implements Runnable {
         this.port = port;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
+        this.serverHandler = new WifiDirectGroupServerHandler(this);
         this.activePeers = new ArrayList<WifiDirectPeer>();
     }
 
@@ -69,7 +72,7 @@ public class WifiDirectGroupServer implements Runnable {
                                                              Delimiters.lineDelimiter()));
                     p.addLast(new StringEncoder());
                     p.addLast(new StringDecoder());
-                    p.addLast(new WifiDirectGroupServerHandler(WifiDirectGroupServer.this));
+                    p.addLast(WifiDirectGroupServer.this.serverHandler);
                 }
             });
 
@@ -93,6 +96,9 @@ public class WifiDirectGroupServer implements Runnable {
         peer.setId(this.activePeers.size() + 1);
         this.activePeers.add(peer);
         this.peerRegistered(peer);
+//        if(peer.getId() > 1) {
+//            this.peersChanged();
+//        }
     }
 
     /* Server Events */
@@ -106,12 +112,33 @@ public class WifiDirectGroupServer implements Runnable {
         });
     }
 
-    public void peerConnected(String peer) {
-        this.p2p.ConnectionAccepted(peer);
+    public void peerConnected(final String peer) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectGroupServer.this.p2p.ConnectionAccepted(peer);
+            }
+        });
     }
 
-    public void peerRegistered(WifiDirectPeer peer) {
-        this.p2p.ConnectionRegistered(peer.getName());
+    public void peerRegistered(final WifiDirectPeer peer) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectGroupServer.this.p2p.ConnectionRegistered(peer.getName());
+            }
+        });
+    }
+
+    public void peersChanged() {
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, PeerMessage.CTRL_PEERS_CHANGE, " ");
+        this.serverHandler.broadcastMessage(msg);
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectGroupServer.this.p2p.PeersChanged();
+            }
+        });
     }
 
     /* Setters and Getters */

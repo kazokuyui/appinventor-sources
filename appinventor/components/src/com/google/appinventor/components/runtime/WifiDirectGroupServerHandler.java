@@ -1,10 +1,10 @@
 package com.google.appinventor.components.runtime;
 
 import com.google.appinventor.components.runtime.util.PeerMessage;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.*;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.SocketAddress;
 
@@ -17,10 +17,12 @@ import java.net.SocketAddress;
 
 public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     private WifiDirectGroupServer server;
+    private ChannelGroup channels;
 
     public WifiDirectGroupServerHandler(WifiDirectGroupServer server) {
         super();
         this.server = server;
+        this.channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     }
 
     @Override
@@ -32,6 +34,8 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
                 WifiDirectGroupServerHandler.this.server.peerConnected(clientIP);
+                WifiDirectGroupServerHandler.this.channels.add(context.channel());
+                WifiDirectGroupServerHandler.this.server.peersChanged();
             }
         });
     }
@@ -68,6 +72,12 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
         ctx.close();
     }
 
+    public void broadcastMessage(PeerMessage msg) {
+        for(Channel c : this.channels) {
+            c.writeAndFlush(msg.toString());
+        }
+    }
+
     public String parseIp(SocketAddress socketAddress) {
         return socketAddress.toString().substring(1).split(":")[0].trim();
     }
@@ -75,5 +85,9 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     public PeerMessage parseResponse(String response) {
         String[] separated = response.split("/");
         return new PeerMessage(Integer.parseInt(separated[0]), separated[1], separated[2]);
+    }
+
+    public ChannelGroup getChannels() {
+        return this.channels;
     }
 }

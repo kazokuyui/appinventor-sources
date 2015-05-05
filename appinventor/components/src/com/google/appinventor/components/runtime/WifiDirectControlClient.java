@@ -91,7 +91,9 @@ public class WifiDirectControlClient implements Runnable {
     }
 
     public void stop() {
+        this.serverChannel.close();
         this.group.shutdownGracefully();
+        this.deviceDisconnected();
     }
 
     /* Client events */
@@ -123,6 +125,24 @@ public class WifiDirectControlClient implements Runnable {
             @Override
             public void run() {
                 WifiDirectControlClient.this.p2p.PeersAvailable();
+            }
+        });
+    }
+
+    public void peersChanged() {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectControlClient.this.p2p.PeersChanged();
+            }
+        });
+    }
+
+    public void deviceDisconnected() {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectControlClient.this.p2p.DeviceDisconnected();
             }
         });
     }

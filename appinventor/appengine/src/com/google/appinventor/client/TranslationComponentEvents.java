@@ -52,7 +52,7 @@ public class TranslationComponentEvents {
     map.put("GroupInfoAvailable", MESSAGES.GroupInfoAvailableEvents());
     map.put("ConnectedToNetwork", MESSAGES.ConnectedToNetworkEvents());
     map.put("DisconnectedToNetwork", MESSAGES.DisconnectedToNetworkEvents());
-    map.put("DataReceived", MESSAGES.DataReceivedEvents());
+    map.put("PeersChanged", MESSAGES.PeersChangedEvents());
     map.put("DataSent", MESSAGES.DataSentEvents());
     map.put("ChannelDisconnected", MESSAGES.ChannelDisconnectedEvents());
     map.put("DeviceRegistered", MESSAGES.DeviceRegisteredEvents());

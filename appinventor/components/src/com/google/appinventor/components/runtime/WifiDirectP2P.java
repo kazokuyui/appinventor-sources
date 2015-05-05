@@ -92,6 +92,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     /* Network Layer Events */
     @SimpleEvent(description = "List of nearby devices is available; Triggered by DiscoverDevices")
     public void DevicesAvailable() {
+        this.setStatus(Available);
         EventDispatcher.dispatchEvent(this, "DevicesAvailable");
     }
 
@@ -122,9 +123,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "ConnectedToNetwork");
     }
 
-    @SimpleEvent(description = "Channel is disconnected to the network; Triggered by Disconnect")
+    @SimpleEvent(description = "Channel is disconnected to the network; Triggered by Receiver.disconnect")
     public void DisconnectedToNetwork() {
-        this.setStatus(Available);
+        this.setStatus(Idle);
         EventDispatcher.dispatchEvent(this, "DisconnectedToNetwork");
     }
 
@@ -141,9 +142,15 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "DeviceRegistered", deviceId);
     }
 
-    @SimpleEvent(description = "Peers information is available from the Group Owner Server")
+    @SimpleEvent(description = "Peers information is available from the Group Owner Server; Triggered by PeersChanged or RequestPeers")
     public void PeersAvailable()  {
         EventDispatcher.dispatchEvent(this, "PeersAvailable");
+    }
+
+    @SimpleEvent(description = "Device is now disconnected to the Group Owner Server ")
+    public void DeviceDisconnected() {
+        this.setStatus(NetworkConnected);
+        EventDispatcher.dispatchEvent(this, "DeviceDisconnected");
     }
 
     /* Server Application Layer Events */
@@ -163,9 +170,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     /* Core Events of the framework for Peer-to-Peer communication */
-    @SimpleEvent(description = "Data is received")
-    public void DataReceived(final String msg) {
-        EventDispatcher.dispatchEvent(this, "DataReceived", msg);
+    @SimpleEvent(description = "PeersList has changed; Triggered by ControlClient or GroupServer.register")
+    public void PeersChanged() {
+        EventDispatcher.dispatchEvent(this, "PeersChanged");
     }
 
     @SimpleEvent(description = "Data sent")
@@ -418,6 +425,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleFunction(description = "Stop the client")
     public void StopClient() {
         this.controlClient.stop();
+        this.receiver.disconnect();
     }
 
     @Override

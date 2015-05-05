@@ -40,6 +40,9 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
             else if(response.getHeader().equals(PeerMessage.CTRL_PEERS_LIST)) {
                 this.client.peersAvailable(this.getPeersList(response.getData()));
             }
+            else if(response.getHeader().equals(PeerMessage.CTRL_PEERS_CHANGE)) {
+                this.client.peersChanged();
+            }
         }
     }
 
