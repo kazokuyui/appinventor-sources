@@ -22,6 +22,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     public WifiDirectGroupServerHandler(WifiDirectGroupServer server) {
         super();
         this.server = server;
+        this.server.setServerHandler(this);
         this.channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     }
 

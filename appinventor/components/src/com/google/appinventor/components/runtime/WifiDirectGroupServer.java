@@ -33,7 +33,7 @@ public class WifiDirectGroupServer implements Runnable {
     private Handler handler;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
-    WifiDirectGroupServerHandler serverHandler;
+    private WifiDirectGroupServerHandler serverHandler;
 
     private InetAddress hostAddress;
     private int port;
@@ -46,7 +46,6 @@ public class WifiDirectGroupServer implements Runnable {
         this.port = port;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
-        this.serverHandler = new WifiDirectGroupServerHandler(this);
         this.activePeers = new ArrayList<WifiDirectPeer>();
     }
 
@@ -72,7 +71,7 @@ public class WifiDirectGroupServer implements Runnable {
                                                              Delimiters.lineDelimiter()));
                     p.addLast(new StringEncoder());
                     p.addLast(new StringDecoder());
-                    p.addLast(WifiDirectGroupServer.this.serverHandler);
+                    p.addLast(new WifiDirectGroupServerHandler(WifiDirectGroupServer.this));
                 }
             });
 
@@ -157,6 +156,10 @@ public class WifiDirectGroupServer implements Runnable {
 
     public void setHandler(Handler handler) {
         this.handler = handler;
+    }
+
+    public void setServerHandler(WifiDirectGroupServerHandler serverHandler) {
+        this.serverHandler = serverHandler;
     }
 
     public String getPeersList() {
