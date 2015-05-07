@@ -106,7 +106,7 @@ public class WifiDirectGroupServer implements Runnable {
         this.handler.post(new Runnable() {
             @Override
             public void run() {
-                WifiDirectGroupServer.this.p2p.GOServerStarted(ipAddress);
+                WifiDirectGroupServer.this.p2p.GoServerStarted(ipAddress);
             }
         });
     }

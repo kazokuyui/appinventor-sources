@@ -56,12 +56,11 @@ public class TranslationComponentMethods {
     map.put("ConnectWithUUID", MESSAGES.ConnectWithUUIDMethods());
     map.put("Disconnect", MESSAGES.DisconnectMethods());
     map.put("DiscoverDevices", MESSAGES.DiscoverDevicesMethods());
-    map.put("RegisterDevice", MESSAGES.RegisterDeviceMethods());
-    map.put("RequestPeers", MESSAGES.RequestPeersMethods());
-    map.put("RequestConnectionInfo", MESSAGES.RequestConnectionInfoMethods());
-    map.put("SendData", MESSAGES.SendDataMethods());
     map.put("ReceiveData", MESSAGES.ReceiveDataMethods());
-    map.put("BroadcastPeers", MESSAGES.BroadcastPeersMethods());
+    map.put("RequestPeers", MESSAGES.RequestPeersMethods());
+    map.put("StopGoServer", MESSAGES.StopGoServerMethods());
+    map.put("StopClient", MESSAGES.StopClientMethods());
+    map.put("SendData", MESSAGES.SendDataMethods());
     map.put("IsDevicePaired", MESSAGES.IsDevicePairedMethods());
     map.put("ReceiveSigned1ByteNumber", MESSAGES.ReceiveSigned1ByteNumberMethods());
     map.put("ReceiveSigned2ByteNumber", MESSAGES.ReceiveSigned2ByteNumberMethods());
@@ -77,10 +76,6 @@ public class TranslationComponentMethods {
     map.put("Send4ByteNumber", MESSAGES.Send4ByteNumberMethods());
     map.put("SendBytes", MESSAGES.SendBytesMethods());
     map.put("SendText", MESSAGES.SendTextMethods());
-    map.put("StartGOServer", MESSAGES.StartGOServerMethods());
-    map.put("StopGOServer", MESSAGES.StopGOServerMethods());
-    map.put("StartClient", MESSAGES.StartClientMethods());
-    map.put("StopClient", MESSAGES.StopClientMethods());
     map.put("AcceptConnectionWithUUID", MESSAGES.AcceptConnectionWithUUIDMethods());
     map.put("BytesAvailableToReceive", MESSAGES.BytesAvailableToReceiveMethods());
     map.put("StopAccepting", MESSAGES.StopAcceptingMethods());

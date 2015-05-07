@@ -2240,9 +2240,9 @@ public interface OdeMessages extends Messages {
   @Description("")
   String AllowCookiesProperties();
 
-  @DefaultMessage("AvailablePeers")
+  @DefaultMessage("IsWifiEnabled")
   @Description("")
-  String AvailablePeersProperties();
+  String IsWifiEnabledProperties();
 
   @DefaultMessage("Device")
   @Description("")
@@ -2252,6 +2252,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DeviceNameProperties();
 
+  @DefaultMessage("DeviceStatus")
+  @Description("")
+  String DeviceStatusProperties();
+
   @DefaultMessage("DeviceMACAddress")
   @Description("")
   String DeviceMACAddressProperties();
@@ -2260,17 +2264,21 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DeviceIPAddressProperties();
 
-  @DefaultMessage("DeviceStatus")
+  @DefaultMessage("AvailableDevices")
   @Description("")
-  String DeviceStatusProperties();
+  String AvailableDevicesProperties();
 
-  @DefaultMessage("GroupOwner")
+  @DefaultMessage("AvailablePeers")
   @Description("")
-  String GroupOwnerProperties();
+  String AvailablePeersProperties();
 
   @DefaultMessage("GroupName")
   @Description("")
   String GroupNameProperties();
+
+  @DefaultMessage("GroupOwner")
+  @Description("")
+  String GroupOwnerProperties();
 
   @DefaultMessage("GroupOwnerAddress")
   @Description("")
@@ -2283,10 +2291,6 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("IsGroupOwner")
   @Description("")
   String IsGroupOwnerProperties();
-
-  @DefaultMessage("IsWifiEnabled")
-  @Description("")
-  String IsWifiEnabledProperties();
 
   @DefaultMessage("ApiKey")
   @Description("")
@@ -2875,10 +2879,6 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("AddressesAndNames")
   @Description("")
   String AddressesAndNamesProperties();
-
-  @DefaultMessage("AvailableDevices")
-  @Description("")
-  String AvailableDevicesProperties();
 
   @DefaultMessage("ServerPort")
   @Description("")
@@ -3707,10 +3707,7 @@ public interface OdeMessages extends Messages {
   @Description("")
   String AfterActivityEvents();
 
-  @DefaultMessage("PeersAvailable")
-  @Description("")
-  String PeersAvailableEvents();
-
+  //WifiDirect Network Events
   @DefaultMessage("DevicesAvailable")
   @Description("")
   String DevicesAvailableEvents();
@@ -3719,25 +3716,48 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DeviceInfoAvailableEvents();
 
-  @DefaultMessage("DeviceConnected")
+  @DefaultMessage("AvailableToNetwork")
   @Description("")
-  String DeviceConnectedEvents();
-
-  @DefaultMessage("ConnectionInfoAvailable")
-  @Description("")
-  String ConnectionInfoAvailableEvents();
-
-  @DefaultMessage("GroupInfoAvailable")
-  @Description("")
-  String GroupInfoAvailableEvents();
+  String AvailableToNetworkEvents();
 
   @DefaultMessage("ConnectedToNetwork")
   @Description("")
   String ConnectedToNetworkEvents();
 
+  @DefaultMessage("NetworkInfoAvailable")
+  @Description("")
+  String NetworkInfoAvailableEvents();
+
   @DefaultMessage("DisconnectedToNetwork")
   @Description("")
   String DisconnectedToNetworkEvents();
+
+  //WifiDirect Client Application
+  @DefaultMessage("DeviceConnected")
+  @Description("")
+  String DeviceConnectedEvents();
+
+  @DefaultMessage("DeviceRegistered")
+  @Description("")
+  String DeviceRegisteredEvents();
+
+  @DefaultMessage("DeviceDisconnected")
+  @Description("")
+  String DeviceDisconnectedEvents();
+
+  //WifiDirect Server Application
+  @DefaultMessage("GoServerStarted")
+  @Description("")
+  String GoServerStartedEvents();
+
+  @DefaultMessage("ConnectionRegistered")
+  @Description("")
+  String ConnectionRegisteredEvents();
+
+  //WifiDirect Core
+  @DefaultMessage("PeersAvailable")
+  @Description("")
+  String PeersAvailableEvents();
 
   @DefaultMessage("PeersChanged")
   @Description("")
@@ -3746,14 +3766,6 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("DataSent")
   @Description("")
   String DataSentEvents();
-
-  @DefaultMessage("DeviceRegistered")
-  @Description("")
-  String DeviceRegisteredEvents();
-
-  @DefaultMessage("ChannelDisconnected")
-  @Description("")
-  String ChannelDisconnectedEvents();
 
   @DefaultMessage("Trigger")
   @Description("")
@@ -3798,10 +3810,6 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("AfterScan")
   @Description("")
   String AfterScanEvents();
-
-  @DefaultMessage("GOServerStarted")
-  @Description("")
-  String GOServerStartedEvents();
 
   @DefaultMessage("ConnectionAccepted")
   @Description("")
@@ -4136,14 +4144,6 @@ public interface OdeMessages extends Messages {
   @Description("")
   String ConnectMethods();
 
-  @DefaultMessage("SendData")
-  @Description("")
-  String SendDataMethods();
-
-  @DefaultMessage("ReceiveData")
-  @Description("")
-  String ReceiveDataMethods();
-
   @DefaultMessage("ConnectWithUUID")
   @Description("")
   String ConnectWithUUIDMethods();
@@ -4156,21 +4156,25 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DiscoverDevicesMethods();
 
-  @DefaultMessage("RegisterDevice")
+  @DefaultMessage("ReceiveData")
   @Description("")
-  String RegisterDeviceMethods();
+  String ReceiveDataMethods();
+
+  @DefaultMessage("SendData")
+  @Description("")
+  String SendDataMethods();
 
   @DefaultMessage("RequestPeers")
   @Description("")
   String RequestPeersMethods();
 
-  @DefaultMessage("RequestConnectionInfo")
+  @DefaultMessage("StopGoServer")
   @Description("")
-  String RequestConnectionInfoMethods();
+  String StopGoServerMethods();
 
-  @DefaultMessage("BroadcastPeers")
+  @DefaultMessage("StopClient")
   @Description("")
-  String BroadcastPeersMethods();
+  String StopClientMethods();
 
   @DefaultMessage("IsDevicePaired")
   @Description("")
@@ -4231,22 +4235,6 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("SendText")
   @Description("")
   String SendTextMethods();
-
-  @DefaultMessage("StartGOServer")
-  @Description("")
-  String StartGOServerMethods();
-
-  @DefaultMessage("StopGOServer")
-  @Description("")
-  String StopGOServerMethods();
-
-  @DefaultMessage("StartClient")
-  @Description("")
-  String StartClientMethods();
-
-  @DefaultMessage("StopClient")
-  @Description("")
-  String StopClientMethods();
 
   @DefaultMessage("AcceptConnectionWithUUID")
   @Description("")

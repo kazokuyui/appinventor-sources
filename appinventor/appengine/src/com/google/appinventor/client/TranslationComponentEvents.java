@@ -44,19 +44,6 @@ public class TranslationComponentEvents {
 
     // Events
     map.put("AccelerationChanged", MESSAGES.AccelerationChangedEvents());
-    map.put("DevicesAvailable", MESSAGES.DevicesAvailableEvents());
-    map.put("DeviceInfoAvailable", MESSAGES.DeviceInfoAvailableEvents());
-    map.put("DeviceConnected", MESSAGES.DeviceConnectedEvents());
-    map.put("PeersAvailable", MESSAGES.PeersAvailableEvents());
-    map.put("ConnectionInfoAvailable", MESSAGES.ConnectionInfoAvailableEvents());
-    map.put("GroupInfoAvailable", MESSAGES.GroupInfoAvailableEvents());
-    map.put("ConnectedToNetwork", MESSAGES.ConnectedToNetworkEvents());
-    map.put("DisconnectedToNetwork", MESSAGES.DisconnectedToNetworkEvents());
-    map.put("PeersChanged", MESSAGES.PeersChangedEvents());
-    map.put("DataSent", MESSAGES.DataSentEvents());
-    map.put("ChannelDisconnected", MESSAGES.ChannelDisconnectedEvents());
-    map.put("DeviceRegistered", MESSAGES.DeviceRegisteredEvents());
-    map.put("Trigger", MESSAGES.TriggerEvents());
     map.put("AfterActivity", MESSAGES.AfterActivityEvents());
     map.put("CollidedWith", MESSAGES.CollidedWithEvents());
     map.put("Dragged", MESSAGES.DraggedEvents());
@@ -67,7 +54,6 @@ public class TranslationComponentEvents {
     map.put("TouchUp", MESSAGES.TouchUpEvents());
     map.put("Touched", MESSAGES.TouchedEvents());
     map.put("AfterScan", MESSAGES.AfterScanEvents());
-    map.put("GOServerStarted", MESSAGES.GOServerStartedEvents());
     map.put("ConnectionAccepted", MESSAGES.ConnectionAcceptedEvents());
     map.put("Click", MESSAGES.ClickEvents());
     map.put("GotFocus", MESSAGES.GotFocusEvents());
@@ -148,6 +134,21 @@ public class TranslationComponentEvents {
     map.put("AfterTimeSet", MESSAGES.AfterTimeSetEvents());
     map.put("GotTranslation", MESSAGES.GotTranslationEvents());
     map.put("Shaking", MESSAGES.ShakingEvents());
+    map.put("DevicesAvailable", MESSAGES.DevicesAvailableEvents());
+    map.put("DeviceInfoAvailable", MESSAGES.DeviceInfoAvailableEvents());
+    map.put("AvailableToNetwork", MESSAGES.AvailableToNetworkEvents());
+    map.put("ConnectedToNetwork", MESSAGES.ConnectedToNetworkEvents());
+    map.put("NetworkInfoAvailable", MESSAGES.NetworkInfoAvailableEvents());
+    map.put("DisconnectedToNetwork", MESSAGES.DisconnectedToNetworkEvents());
+    map.put("DeviceConnected", MESSAGES.DeviceConnectedEvents());
+    map.put("DeviceRegistered", MESSAGES.DeviceRegisteredEvents());
+    map.put("DeviceDisconnected", MESSAGES.DeviceDisconnectedEvents());
+    map.put("GoServerStarted", MESSAGES.GoServerStartedEvents());
+    map.put("ConnectionRegistered", MESSAGES.ConnectionRegisteredEvents());
+    map.put("PeersAvailable", MESSAGES.PeersAvailableEvents());
+    map.put("PeersChanged", MESSAGES.PeersChangedEvents());
+    map.put("DataSent", MESSAGES.DataSentEvents());
+    map.put("Trigger", MESSAGES.TriggerEvents());
 
 	/*
   //event helpstrings

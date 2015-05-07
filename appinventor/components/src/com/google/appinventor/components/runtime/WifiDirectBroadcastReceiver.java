@@ -60,7 +60,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
         this.main.setConnectionInfo(wifiP2pInfo);
-        this.main.ConnectionInfoAvailable();
+        this.main.connectionInfoAvailable();
     }
 
     @Override
@@ -77,7 +77,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
     @Override
     public void onGroupInfoAvailable(WifiP2pGroup wifiP2pGroup) {
         this.main.setP2PGroup(wifiP2pGroup);
-        this.main.GroupInfoAvailable();
+        this.main.groupInfoAvailable();
     }
 
     public Collection<WifiP2pDevice> getAvailableDevices() {

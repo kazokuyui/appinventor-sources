@@ -48,20 +48,6 @@ public class TranslationComponentProperty {
     map.put("CurrentUrl", MESSAGES.CurrentUrlProperties());
     map.put("Accuracy", MESSAGES.AccuracyProperties());
     map.put("AddressesAndNames", MESSAGES.AddressesAndNamesProperties());
-    map.put("AvailableDevices", MESSAGES.AvailableDevicesProperties());
-    map.put("AvailablePeers", MESSAGES.AvailablePeersProperties());
-    map.put("Device", MESSAGES.DeviceProperties());
-    map.put("DeviceName", MESSAGES.DeviceNameProperties());
-    map.put("DeviceMACAddress", MESSAGES.DeviceMACAddressProperties());
-    map.put("DeviceIPAddress", MESSAGES.DeviceIPAddressProperties());
-    map.put("DeviceStatus", MESSAGES.DeviceStatusProperties());
-    map.put("GroupOwner", MESSAGES.GroupOwnerProperties());
-    map.put("GroupName", MESSAGES.GroupNameProperties());
-    map.put("GroupOwnerAddress", MESSAGES.GroupOwnerAddressProperties());
-    map.put("GroupPassphrase", MESSAGES.GroupPassphraseProperties());
-    map.put("IsGroupOwner", MESSAGES.IsGroupOwnerProperties());
-    map.put("IsWifiEnabled", MESSAGES.IsWifiEnabledProperties());
-    map.put("ServerPort", MESSAGES.ServerPortProperties());
     map.put("AcceptingConnection", MESSAGES.AcceptingConnectionProperties());
     map.put("Connected", MESSAGES.ConnectedProperties());
     map.put("Altitude", MESSAGES.AltitudeProperties());
@@ -86,9 +72,6 @@ public class TranslationComponentProperty {
     map.put("Height", MESSAGES.HeightProperties());
     map.put("InstanceId", MESSAGES.InstanceIdProperties());
     map.put("InvitedInstances", MESSAGES.InvitedInstancesProperties());
-    map.put("IsAccepting", MESSAGES.IsAcceptingProperties());
-    map.put("IsConnected", MESSAGES.IsConnectedProperties());
-    map.put("IsRegistered", MESSAGES.IsRegisteredProperties());
     map.put("IsPlaying", MESSAGES.IsPlayingProperties());
     map.put("JoinedInstances", MESSAGES.JoinedInstancesProperties());
     map.put("Latitude", MESSAGES.LatitudeProperties());
@@ -259,6 +242,21 @@ public class TranslationComponentProperty {
     // ========== ListPicker
     map.put("ItemTextColor", MESSAGES.ItemTextColorProperties());
     map.put("ItemBackgroundColor", MESSAGES.ItemBackgroundColorProperties());
+
+    // ========== WifiDirect
+    map.put("IsWifiEnabled", MESSAGES.IsWifiEnabledProperties());
+    map.put("Device", MESSAGES.DeviceProperties());
+    map.put("DeviceName", MESSAGES.DeviceNameProperties());
+    map.put("DeviceStatus", MESSAGES.DeviceStatusProperties());
+    map.put("DeviceMACAddress", MESSAGES.DeviceMACAddressProperties());
+    map.put("DeviceIPAddress", MESSAGES.DeviceIPAddressProperties());
+    map.put("AvailableDevices", MESSAGES.AvailableDevicesProperties());
+    map.put("AvailablePeers", MESSAGES.AvailablePeersProperties());
+    map.put("GroupOwner", MESSAGES.GroupOwnerProperties());
+    map.put("GroupName", MESSAGES.GroupNameProperties());
+    map.put("GroupOwnerAddress", MESSAGES.GroupOwnerAddressProperties());
+    map.put("GroupPassphrase", MESSAGES.GroupPassphraseProperties());
+    map.put("IsGroupOwner", MESSAGES.IsGroupOwnerProperties());
 
     return map;
   }
