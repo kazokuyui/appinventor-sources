@@ -35,12 +35,15 @@ public class WifiDirectControlClient implements Runnable {
 
     private EventLoopGroup group;
 
+    public boolean isRunning;
+
     public WifiDirectControlClient(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
         this.hostAddress = hostAddress;
         this.port = port;
         this.group = new NioEventLoopGroup();
         this.clientHandler = new WifiDirectControlClientHandler(this);
+        this.isRunning = false;
     }
 
     public void run() {
@@ -91,7 +94,7 @@ public class WifiDirectControlClient implements Runnable {
     }
 
     public void stop() {
-        this.serverChannel.close();
+        this.clientHandler.quit(this.serverChannel);
         this.group.shutdownGracefully();
         this.deviceDisconnected();
     }
@@ -100,6 +103,7 @@ public class WifiDirectControlClient implements Runnable {
     public void peerConnected(final String ipAddress) {
         this.status = PeerMessage.CTRL_CONNECTED;
         this.mPeer.setIpAddress(ipAddress);
+        this.isRunning = true;
         this.handler.post(new Runnable() {
             @Override
             public void run() {

@@ -90,22 +90,15 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
 
     public void disconnect() {
         if (this.manager != null && this.channel != null) {
-            manager.requestGroupInfo(channel, new GroupInfoListener() {
+            manager.removeGroup(this.channel, new ActionListener() {
                 @Override
-                public void onGroupInfoAvailable(WifiP2pGroup group) {
-                    if (group != null && manager != null && channel != null) {
-                        manager.removeGroup(channel, new ActionListener() {
-                            @Override
-                            public void onSuccess() {
-                                WifiDirectBroadcastReceiver.this.main.DisconnectedToNetwork();
-                            }
+                public void onSuccess() {
+                    WifiDirectBroadcastReceiver.this.main.DisconnectedToNetwork();
+                }
 
-                            @Override
-                            public void onFailure(int i) {
+                @Override
+                public void onFailure(int i) {
 
-                            }
-                        });
-                    }
                 }
             });
         }

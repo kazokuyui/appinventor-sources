@@ -7,6 +7,7 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.SocketAddress;
+import java.util.HashMap;
 
 /**
  * Java NIO Server Handler for WifiDirect Component
@@ -18,12 +19,14 @@ import java.net.SocketAddress;
 public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     private WifiDirectGroupServer server;
     private ChannelGroup channels;
+    private HashMap<String, WifiDirectPeer> peerChannels;
 
     public WifiDirectGroupServerHandler(WifiDirectGroupServer server) {
         super();
         this.server = server;
         this.server.setServerHandler(this);
         this.channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+        this.peerChannels = new HashMap<String, WifiDirectPeer>();
     }
 
     @Override
@@ -44,7 +47,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
         PeerMessage response = this.parseResponse((String) msg);
         if(response.getType() == PeerMessage.CONTROL_DATA) {
             if(response.getHeader().equals(PeerMessage.CTRL_REGISTER)) {
-                WifiDirectPeer peer = new WifiDirectPeer(response.getData());
+                final WifiDirectPeer peer = new WifiDirectPeer(response.getData());
                 this.server.registerPeer(peer);
                 PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
                                                     PeerMessage.CTRL_REGISTERED,
@@ -54,6 +57,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
                     @Override
                     public void operationComplete(ChannelFuture channelFuture) throws Exception {
                         WifiDirectGroupServerHandler.this.channels.add(context.channel());
+                        WifiDirectGroupServerHandler.this.peerChannels.put(context.channel().id().asLongText(), peer);
                         WifiDirectGroupServerHandler.this.server.peersChanged();
                     }
                 });
@@ -64,6 +68,10 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
                                                     this.server.getPeersList());
                 context.channel().writeAndFlush(reply.toString());
             }
+            else if(response.getHeader().equals(PeerMessage.CTRL_QUIT)) {
+                this.server.removePeerById(Integer.valueOf(response.getData()));
+                context.close();
+            }
         }
     }
 
@@ -73,13 +81,26 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+    public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
         this.server.trigger(cause.toString());
-        ctx.close();
+        this.closeChannel(context.channel());
     }
 
     public void broadcastMessage(PeerMessage msg) {
         this.channels.writeAndFlush(msg.toString());
+    }
+
+    public void closeChannel(Channel channel) {
+        String channelId = channel.id().asLongText();
+        WifiDirectPeer peer = this.peerChannels.get(channelId);
+        this.server.removePeerById(peer.getId());
+        ChannelFuture f = channel.close();
+        f.addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                WifiDirectGroupServerHandler.this.server.peersChanged();
+            }
+        });
     }
 
     public String parseIp(SocketAddress socketAddress) {

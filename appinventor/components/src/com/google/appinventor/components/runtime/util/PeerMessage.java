@@ -16,6 +16,7 @@ public class PeerMessage {
     public static final String CTRL_REQUEST_PEER = "REQUEST_PEER";
     public static final String CTRL_PEERS_LIST = "PEERS_LIST";
     public static final String CTRL_PEERS_CHANGE = "PEERS_CHANGE";
+    public static final String CTRL_QUIT = "QUIT";
 
     private int type;
     private String header;

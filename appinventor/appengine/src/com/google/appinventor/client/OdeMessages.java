@@ -4168,14 +4168,6 @@ public interface OdeMessages extends Messages {
   @Description("")
   String RequestPeersMethods();
 
-  @DefaultMessage("StopGoServer")
-  @Description("")
-  String StopGoServerMethods();
-
-  @DefaultMessage("StopClient")
-  @Description("")
-  String StopClientMethods();
-
   @DefaultMessage("IsDevicePaired")
   @Description("")
   String IsDevicePairedMethods();

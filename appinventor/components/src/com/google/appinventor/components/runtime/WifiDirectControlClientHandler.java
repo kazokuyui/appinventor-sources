@@ -64,6 +64,13 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
         serverChannel.writeAndFlush(msg.toString());
     }
 
+    public void quit(Channel serverChannel) {
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                          PeerMessage.CTRL_QUIT,
+                                          Integer.toString(this.client.getmPeer().getId()));
+        serverChannel.writeAndFlush(msg.toString());
+    }
+
     public PeerMessage parseResponse(String response) {
         String[] separated = response.split("/");
         return new PeerMessage(Integer.parseInt(separated[0]), separated[1], separated[2]);

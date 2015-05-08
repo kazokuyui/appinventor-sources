@@ -39,6 +39,7 @@ public class WifiDirectGroupServer implements Runnable {
     private int port;
 
     private Collection<WifiDirectPeer> activePeers;
+    public boolean isAccepting;
 
     public WifiDirectGroupServer(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
@@ -47,6 +48,7 @@ public class WifiDirectGroupServer implements Runnable {
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
         this.activePeers = new ArrayList<WifiDirectPeer>();
+        this.isAccepting = false;
     }
 
     public void run() {
@@ -100,9 +102,27 @@ public class WifiDirectGroupServer implements Runnable {
 //        }
     }
 
+    public WifiDirectPeer getPeerById(int peerId) {
+        if(this.activePeers.size() > 0) {
+            for (WifiDirectPeer peer : this.activePeers) {
+                if(peer.getId() == peerId) {
+                    return peer;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public void removePeerById(int peerId) {
+        this.activePeers.remove(this.getPeerById(peerId));
+        this.peersChanged();
+    }
+
     /* Server Events */
     public void serverStarted() {
         final String ipAddress = this.hostAddress.getHostAddress();
+        this.isAccepting = true;
         this.handler.post(new Runnable() {
             @Override
             public void run() {

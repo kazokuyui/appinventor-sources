@@ -123,6 +123,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleEvent(description = "Channel is disconnected to the network; Triggered by Receiver.disconnect")
     public void DisconnectedToNetwork() {
         this.setStatus(Idle);
+        if(this.IsGroupOwner()) {
+            this.Trigger("GO DISCONNECT");
+        }
         EventDispatcher.dispatchEvent(this, "DisconnectedToNetwork");
     }
 
@@ -142,6 +145,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleEvent(description = "Device is now disconnected to the Group Owner Server ")
     public void DeviceDisconnected() {
         this.setStatus(NetworkConnected);
+        this.receiver.disconnect();
         EventDispatcher.dispatchEvent(this, "DeviceDisconnected");
     }
 
@@ -361,14 +365,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         }
     }
 
-    public void StopGOServer(){
-        this.groupServer.stop();
-    }
-
     @SimpleFunction(description = "Stop the client")
-    public void StopClient() {
+    public void Disconnect() {
         this.controlClient.stop();
-        this.receiver.disconnect();
     }
 
     @Override
@@ -392,9 +391,14 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     public void groupInfoAvailable() {
         this.NetworkInfoAvailable();
         if(this.mConnectionInfo.isGroupOwner) {
-            this.startGoServer();
+            if(this.groupServer == null || !this.groupServer.isAccepting) {
+                this.startGoServer();
+            }
         }
-        this.startClient(WifiDirectUtil.groupServerPort);
+
+        if(this.controlClient == null || !this.controlClient.isRunning) {
+            this.startClient(WifiDirectUtil.groupServerPort);
+        }
     }
 
     public void startGoServer() {

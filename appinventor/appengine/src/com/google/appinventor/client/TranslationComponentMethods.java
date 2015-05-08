@@ -58,8 +58,6 @@ public class TranslationComponentMethods {
     map.put("DiscoverDevices", MESSAGES.DiscoverDevicesMethods());
     map.put("ReceiveData", MESSAGES.ReceiveDataMethods());
     map.put("RequestPeers", MESSAGES.RequestPeersMethods());
-    map.put("StopGoServer", MESSAGES.StopGoServerMethods());
-    map.put("StopClient", MESSAGES.StopClientMethods());
     map.put("SendData", MESSAGES.SendDataMethods());
     map.put("IsDevicePaired", MESSAGES.IsDevicePairedMethods());
     map.put("ReceiveSigned1ByteNumber", MESSAGES.ReceiveSigned1ByteNumberMethods());
