@@ -17,15 +17,15 @@ import java.util.HashMap;
  */
 
 public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
+    static final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+
     private WifiDirectGroupServer server;
-    private ChannelGroup channels;
     private HashMap<String, WifiDirectPeer> peerChannels;
 
     public WifiDirectGroupServerHandler(WifiDirectGroupServer server) {
         super();
         this.server = server;
         this.server.setServerHandler(this);
-        this.channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
         this.peerChannels = new HashMap<String, WifiDirectPeer>();
     }
 
@@ -56,7 +56,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
                 f.addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                        WifiDirectGroupServerHandler.this.channels.add(context.channel());
+                        channels.add(context.channel());
                         WifiDirectGroupServerHandler.this.peerChannels.put(context.channel().id().asLongText(), peer);
                         WifiDirectGroupServerHandler.this.server.peersChanged();
                     }
@@ -87,7 +87,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     public void broadcastMessage(PeerMessage msg) {
-        this.channels.writeAndFlush(msg.toString());
+        channels.writeAndFlush(msg.toString());
     }
 
     public void closeChannel(Channel channel) {
