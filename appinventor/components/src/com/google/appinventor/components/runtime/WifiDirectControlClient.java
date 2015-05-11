@@ -93,6 +93,10 @@ public class WifiDirectControlClient implements Runnable {
         this.clientHandler.requestPeers(this.serverChannel);
     }
 
+    public void sendMessage(String msg) {
+        this.clientHandler.sendMessage(this.serverChannel, msg);
+    }
+
     public void stop() {
         this.clientHandler.quit(this.serverChannel);
         this.group.shutdownGracefully();
@@ -147,6 +151,15 @@ public class WifiDirectControlClient implements Runnable {
             @Override
             public void run() {
                 WifiDirectControlClient.this.p2p.DeviceDisconnected();
+            }
+        });
+    }
+
+    public void messageReceived(final String fromPeer, final String msg) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectControlClient.this.p2p.DataReceived(fromPeer, msg);
             }
         });
     }

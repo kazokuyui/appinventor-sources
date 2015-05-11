@@ -181,6 +181,11 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "DataSent", msg);
     }
 
+    @SimpleEvent(description = "Data received")
+    public void DataReceived(String peer, String data) {
+        EventDispatcher.dispatchEvent(this, "DataReceived", peer, data);
+    }
+
     @SimpleEvent(description = "For testing purposes only")
     public void Trigger(final String msg){
         EventDispatcher.dispatchEvent(this, "Trigger", msg);
@@ -339,7 +344,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     public void Connect(String MACAddress) {
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = MACAddress;
-
         this.manager.connect(this.channel, config, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
@@ -353,9 +357,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         });
     }
 
-    @SimpleFunction(description = "Receive data from a particular device")
-    public void ReceiveData(String address, int port) {
-
+    @SimpleFunction(description = "Broadcast string to the network")
+    public void SendData(String msg) {
+        this.controlClient.sendMessage(msg);
     }
 
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")

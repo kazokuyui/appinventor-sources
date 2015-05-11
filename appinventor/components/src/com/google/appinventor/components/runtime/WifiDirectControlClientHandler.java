@@ -44,6 +44,9 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
                 this.client.peersChanged();
             }
         }
+        else if(response.getType() == PeerMessage.USER_DATA) {
+            this.client.messageReceived(response.getHeader(), response.getData());
+        }
     }
 
     @Override
@@ -61,6 +64,11 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
         PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA,
                                           PeerMessage.CTRL_REQUEST_PEER,
                                           Integer.toString(this.client.getmPeer().getId()));
+        serverChannel.writeAndFlush(msg.toString());
+    }
+
+    public void sendMessage(Channel serverChannel, String text) {
+        PeerMessage msg = new PeerMessage(PeerMessage.USER_DATA, PeerMessage.USR_MESSAGE, text);
         serverChannel.writeAndFlush(msg.toString());
     }
 

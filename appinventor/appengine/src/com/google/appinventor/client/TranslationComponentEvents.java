@@ -148,8 +148,8 @@ public class TranslationComponentEvents {
     map.put("PeersAvailable", MESSAGES.PeersAvailableEvents());
     map.put("PeersChanged", MESSAGES.PeersChangedEvents());
     map.put("DataSent", MESSAGES.DataSentEvents());
+    map.put("DataReceived", MESSAGES.DataReceivedEvents());
     map.put("Trigger", MESSAGES.TriggerEvents());
-
 	/*
   //event helpstrings
 	map.put("AccelerationChanged-helpstring", MESSAGES.AccelerationChangedHelpStringEvents());

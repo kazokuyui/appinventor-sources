@@ -3767,6 +3767,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DataSentEvents();
 
+  @DefaultMessage("DataReceived")
+  @Description("")
+  String DataReceivedEvents();
+
   @DefaultMessage("Trigger")
   @Description("")
   String TriggerEvents();
@@ -4155,10 +4159,6 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("DiscoverDevices")
   @Description("")
   String DiscoverDevicesMethods();
-
-  @DefaultMessage("ReceiveData")
-  @Description("")
-  String ReceiveDataMethods();
 
   @DefaultMessage("SendData")
   @Description("")
