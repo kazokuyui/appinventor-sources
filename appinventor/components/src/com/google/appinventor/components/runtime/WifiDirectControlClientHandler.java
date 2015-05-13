@@ -43,6 +43,14 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
             else if(response.getHeader().equals(PeerMessage.CTRL_PEERS_CHANGE)) {
                 this.client.peersChanged();
             }
+            else if(response.getHeader().equals(PeerMessage.CTRL_REQUEST_CALL)) {
+                WifiDirectPeer caller = new WifiDirectPeer(response.getData());
+                this.client.callRequested(caller);
+            }
+            else if(response.getHeader().equals(PeerMessage.CTRL_ACCEPT_CALL)) {
+                WifiDirectPeer client = new WifiDirectPeer(response.getData());
+                this.client.callAccepted(client);
+            }
         }
         else if(response.getType() == PeerMessage.USER_DATA) {
             this.client.messageReceived(response.getHeader(), response.getData());
@@ -64,6 +72,20 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
         PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA,
                                           PeerMessage.CTRL_REQUEST_PEER,
                                           Integer.toString(this.client.getmPeer().getId()));
+        serverChannel.writeAndFlush(msg.toString());
+    }
+
+    public void requestCall(Channel serverChannel, int peerId) {
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                          PeerMessage.CTRL_REQUEST_CALL,
+                                          Integer.toString(peerId));
+        serverChannel.writeAndFlush(msg.toString());
+    }
+
+    public void acceptCall(Channel serverChannel, int peerId) {
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                          PeerMessage.CTRL_ACCEPT_CALL,
+                                          Integer.toString(peerId));
         serverChannel.writeAndFlush(msg.toString());
     }
 

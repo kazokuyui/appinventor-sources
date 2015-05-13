@@ -244,7 +244,6 @@ public class TranslationComponentProperty {
     map.put("ItemBackgroundColor", MESSAGES.ItemBackgroundColorProperties());
 
     // ========== WifiDirect
-    map.put("IsWifiEnabled", MESSAGES.IsWifiEnabledProperties());
     map.put("Device", MESSAGES.DeviceProperties());
     map.put("DeviceName", MESSAGES.DeviceNameProperties());
     map.put("DeviceStatus", MESSAGES.DeviceStatusProperties());

@@ -93,6 +93,14 @@ public class WifiDirectControlClient implements Runnable {
         this.clientHandler.requestPeers(this.serverChannel);
     }
 
+    public void requestCall(int peerId) {
+        this.clientHandler.requestCall(this.serverChannel, peerId);
+    }
+
+    public void acceptCall(int peerId) {
+        this.clientHandler.acceptCall(this.serverChannel, peerId);
+    }
+
     public void sendMessage(String msg) {
         this.clientHandler.sendMessage(this.serverChannel, msg);
     }
@@ -142,6 +150,24 @@ public class WifiDirectControlClient implements Runnable {
             @Override
             public void run() {
                 WifiDirectControlClient.this.p2p.PeersChanged();
+            }
+        });
+    }
+
+    public void callRequested(final WifiDirectPeer peer) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectControlClient.this.p2p.CallReceived(peer.toString());
+            }
+        });
+    }
+
+    public void callAccepted(final WifiDirectPeer peer) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectControlClient.this.p2p.CallAccepted(peer.getIpAddress());
             }
         });
     }

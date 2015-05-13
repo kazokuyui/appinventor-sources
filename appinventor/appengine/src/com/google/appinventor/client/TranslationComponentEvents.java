@@ -147,8 +147,10 @@ public class TranslationComponentEvents {
     map.put("ConnectionRegistered", MESSAGES.ConnectionRegisteredEvents());
     map.put("PeersAvailable", MESSAGES.PeersAvailableEvents());
     map.put("PeersChanged", MESSAGES.PeersChangedEvents());
-    map.put("DataSent", MESSAGES.DataSentEvents());
     map.put("DataReceived", MESSAGES.DataReceivedEvents());
+    map.put("CallReceived", MESSAGES.CallReceivedEvents());
+    map.put("CallAccepted", MESSAGES.CallAcceptedEvents());
+    map.put("CallEnded", MESSAGES.CallEndedEvents());
     map.put("Trigger", MESSAGES.TriggerEvents());
 	/*
   //event helpstrings

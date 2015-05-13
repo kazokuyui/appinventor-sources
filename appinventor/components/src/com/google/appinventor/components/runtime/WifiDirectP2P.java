@@ -2,22 +2,25 @@ package com.google.appinventor.components.runtime;
 
 import android.content.Context;
 import android.content.IntentFilter;
-import android.net.wifi.WifiManager;
+import android.media.*;
 import android.net.wifi.p2p.*;
 import android.os.Handler;
+
 import com.google.appinventor.components.annotations.*;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.util.AsynchUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
-import com.google.appinventor.components.runtime.util.WifiDirectUtil;
+import com.google.appinventor.components.runtime.util.PeerMessage;
 
-import java.io.IOException;
+import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import static com.google.appinventor.components.runtime.WifiDirectP2P.Status.*;
+import static com.google.appinventor.components.runtime.util.WifiDirectUtil.*;
 
 /**
  * A peer-to-peer(p2p) component via WiFi Direct
@@ -39,14 +42,15 @@ import static com.google.appinventor.components.runtime.WifiDirectP2P.Status.*;
                  "android.permission.ACCESS_NETWORK_STATE, " +
                  "android.permission.CHANGE_WIFI_MULTICAST_STATE, " +
                  "android.permission.INTERNET, " +
-                 "android.permission.READ_PHONE_STATE")
+                 "android.permission.READ_PHONE_STATE, " +
+                 "android.permission.RECORD_AUDIO")
 @SimpleObject
 public class WifiDirectP2P extends AndroidNonvisibleComponent implements Component, OnDestroyListener, Deleteable {
     public String TAG;
     public enum Status {
         Idle, Available, Unavailable,
         Invited, NetworkConnected, Connected,
-        Registered, Ready, Failed;
+        Registered, Ready, Failed
     }
 
     /* Network layer for WifiDirect access */
@@ -66,6 +70,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     private Handler handler;
     private Status status;
+    private boolean isCalling;
 
     public WifiDirectP2P(ComponentContainer container) {
         this(container.$form(), "WifiDirectP2P");
@@ -87,6 +92,8 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         form.registerReceiver(this.receiver, intentFilter);
 
         this.handler = new Handler();
+        this.status = Idle;
+        this.isCalling = false;
     }
 
     /* Network Layer Events */
@@ -176,14 +183,25 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "PeersChanged");
     }
 
-    @SimpleEvent(description = "Data sent")
-    public void DataSent(String msg) {
-        EventDispatcher.dispatchEvent(this, "DataSent", msg);
-    }
-
     @SimpleEvent(description = "Data received")
     public void DataReceived(String peer, String data) {
         EventDispatcher.dispatchEvent(this, "DataReceived", peer, data);
+    }
+
+    @SimpleEvent(description = "Call request received")
+    public void CallReceived(String peer) {
+        EventDispatcher.dispatchEvent(this, "CallReceived", peer);
+    }
+
+    @SimpleEvent(description = "Call request received")
+    public void CallAccepted(String peerIp) {
+        this.startCall(peerIp);
+        EventDispatcher.dispatchEvent(this, "CallAccepted");
+    }
+
+    @SimpleEvent(description = "Call ended")
+    public void CallEnded() {
+        EventDispatcher.dispatchEvent(this, "CallEnded");
     }
 
     @SimpleEvent(description = "For testing purposes only")
@@ -191,18 +209,12 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "Trigger", msg);
     }
 
-    @SimpleProperty(description = "Returns true if this device is WiFi-enabled",
-                    category = PropertyCategory.BEHAVIOR)
-    public boolean IsWifiEnabled() {
-        WifiManager wifiManager = (WifiManager) this.form.getSystemService(Context.WIFI_SERVICE);
-        return wifiManager.isWifiEnabled();
-    }
-
+    /* Component Properties */
     @SimpleProperty(description = "Returns the representation of this device with the format" +
                     "[deviceName] deviceMACAddress",
                     category = PropertyCategory.BEHAVIOR)
     public String Device() {
-        return WifiDirectUtil.deviceToString(this.mDevice);
+        return deviceToString(this.mDevice);
     }
 
     @SimpleProperty(description = "Returns name of the device",
@@ -211,7 +223,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         if(this.mDevice != null) {
             return this.mDevice.deviceName;
         }
-        return WifiDirectUtil.defaultDeviceName;
+        return defaultDeviceName;
     }
 
     @SimpleProperty(description = "Returns status of the device",
@@ -245,7 +257,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         if(this.mDevice != null) {
             return this.mDevice.deviceAddress;
         }
-        return WifiDirectUtil.defaultDeviceMACAddress;
+        return defaultDeviceMACAddress;
     }
 
     @SimpleProperty(description = "Returns the IP address of the device",
@@ -254,7 +266,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         if(this.controlClient != null) {
             return this.controlClient.getmPeer().getIpAddress();
         }
-        return WifiDirectUtil.defaultDeviceIPAddress;
+        return defaultDeviceIPAddress;
     }
 
     @SimpleProperty(description = "All the available devices near you",
@@ -264,7 +276,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         Collection<WifiP2pDevice> devices = this.receiver.getAvailableDevices();
         if(devices != null) {
             for (WifiP2pDevice device : devices) {
-                availableDevices.add(WifiDirectUtil.deviceToString(device));
+                availableDevices.add(deviceToString(device));
             }
         }
         return availableDevices;
@@ -289,16 +301,16 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         if(this.mGroup != null) {
             return this.mGroup.getNetworkName();
         }
-        return WifiDirectUtil.defaultGroupName;
+        return defaultGroupName;
     }
 
     @SimpleProperty(description = "Returns the Group owner's device representation",
                     category = PropertyCategory.BEHAVIOR)
     public String GroupOwner() {
         if(this.mGroupOwner != null) {
-            return WifiDirectUtil.deviceToString(this.mGroupOwner);
+            return deviceToString(this.mGroupOwner);
         }
-        return WifiDirectUtil.defaultDeviceName;
+        return defaultDeviceName;
     }
 
     @SimpleProperty(description = "Returns the Group owner's host address",
@@ -307,7 +319,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         if(this.mConnectionInfo != null) {
             return this.mConnectionInfo.groupOwnerAddress.getHostAddress();
         }
-        return WifiDirectUtil.defaultDeviceIPAddress;
+        return defaultDeviceIPAddress;
     }
 
     @SimpleProperty(description = "Returns the passphrase for the group",
@@ -325,6 +337,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         return this.mConnectionInfo != null && this.mConnectionInfo.isGroupOwner;
     }
 
+    /* Component Functions */
     @SimpleFunction(description = "Scan all devices nearby")
     public void DiscoverDevices() {
         this.manager.discoverPeers(this.channel, new WifiP2pManager.ActionListener() {
@@ -357,16 +370,32 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         });
     }
 
-    @SimpleFunction(description = "Broadcast string to the network")
-    public void SendData(String msg) {
-        this.controlClient.sendMessage(msg);
-    }
-
     @SimpleFunction(description = "Requests the list of peers addresses from the group owner")
     public void RequestPeers() {
         if(this.status == Registered) {
             this.controlClient.requestPeers();
         }
+    }
+
+    @SimpleFunction(description = "Broadcast string to the network")
+    public void SendData(String msg) {
+        this.controlClient.sendMessage(msg);
+    }
+
+    @SimpleFunction(description = "Send a call request to another peer")
+    public void CallPeer(int peerId) {
+        this.controlClient.requestCall(peerId);
+    }
+
+    @SimpleEvent(description = "Accept a call from a peer")
+    public void AcceptCall(int peerId) {
+        this.controlClient.acceptCall(peerId);
+        this.startCallReceiver();
+    }
+
+    @SimpleFunction(description = "End Call")
+    public void EndCall() {
+        this.isCalling = false;
     }
 
     @SimpleFunction(description = "Stop the client")
@@ -401,7 +430,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         }
 
         if(this.controlClient == null || !this.controlClient.isRunning) {
-            this.startClient(WifiDirectUtil.groupServerPort);
+            this.startClient(groupServerPort);
         }
     }
 
@@ -410,7 +439,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
             try {
                 this.groupServer = new WifiDirectGroupServer(this,
                                                              this.mConnectionInfo.groupOwnerAddress,
-                                                             WifiDirectUtil.groupServerPort);
+                                                             groupServerPort);
                 this.groupServer.setHandler(this.handler);
                 AsynchUtil.runAsynchronously(this.groupServer);
             } catch (IOException e) {
@@ -425,13 +454,81 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         try {
             this.controlClient = new WifiDirectControlClient(this, this.mConnectionInfo.groupOwnerAddress, port);
             this.controlClient.setHandler(this.handler);
-            this.controlClient.setmPeer(new WifiDirectPeer(this.mDevice, WifiDirectUtil.defaultServerPort));
+            this.controlClient.setmPeer(new WifiDirectPeer(this.mDevice, userServerPort));
             AsynchUtil.runAsynchronously(this.controlClient);
         } catch (Exception e) {
             wifiDirectError("startClient",
                     ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
                     e.getMessage());
         }
+    }
+
+    public void startCallReceiver() {
+        AsynchUtil.runAsynchronously(new Runnable() {
+            @Override
+            public void run() {
+                AudioTrack track = new AudioTrack(AudioManager.STREAM_VOICE_CALL, callFreqRate,
+                                                  AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                                                  callBufferSize, AudioTrack.MODE_STREAM);
+                track.setStereoVolume(AudioTrack.getMaxVolume(), AudioTrack.getMaxVolume());
+                track.play();
+
+                try {
+                    DatagramSocket socket = new DatagramSocket(callReceiverPort);
+                    byte[] buf = new byte[callBufferSize];
+
+                    WifiDirectP2P.this.isCalling = true;
+                    while(WifiDirectP2P.this.isCalling) {
+                        DatagramPacket packet = new DatagramPacket(buf, callBufferSize);
+                        socket.receive(packet);
+                        track.write(packet.getData(), 0, packet.getLength());
+                    }
+
+                    track.release();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public void startCall(final String peerAddress) {
+        AsynchUtil.runAsynchronously(new Runnable() {
+            @Override
+            public void run() {
+                int minBufSize = AudioRecord.getMinBufferSize(callFreqRate,
+                        AudioFormat.CHANNEL_IN_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT) * 10;
+
+                AudioRecord audioRecorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+                        callFreqRate,
+                        AudioFormat.CHANNEL_IN_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT,
+                        minBufSize);
+
+                byte[] buf = new byte[callBufferSize];
+                int bytes_read = 0;
+                try {
+                    InetAddress address = InetAddress.getByName(peerAddress);
+                    DatagramSocket socket = new DatagramSocket();
+                    audioRecorder.startRecording();
+
+                    WifiDirectP2P.this.isCalling = true;
+                    while(WifiDirectP2P.this.isCalling) {
+                        bytes_read = audioRecorder.read(buf, 0, callBufferSize);
+                        if(bytes_read  > 0) {
+                            DatagramPacket packet = new DatagramPacket(buf, bytes_read, address, callReceiverPort);
+                            socket.send(packet);
+                            Thread.sleep(callVoiceInterval, 0);
+                        }
+                    }
+                    audioRecorder.release();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public void setDevice(WifiP2pDevice device) {

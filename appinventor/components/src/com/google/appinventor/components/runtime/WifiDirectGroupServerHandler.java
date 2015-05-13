@@ -48,10 +48,13 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
         if(response.getType() == PeerMessage.CONTROL_DATA) {
             if(response.getHeader().equals(PeerMessage.CTRL_REGISTER)) {
                 final WifiDirectPeer peer = new WifiDirectPeer(response.getData());
+                peer.setChannelId(context.channel().id());
                 this.server.registerPeer(peer);
+
                 PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
                                                     PeerMessage.CTRL_REGISTERED,
                                                     Integer.toString(peer.getId()));
+
                 ChannelFuture f = context.channel().writeAndFlush(reply.toString());
                 f.addListener(new ChannelFutureListener() {
                     @Override
@@ -67,6 +70,20 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
                                                     PeerMessage.CTRL_PEERS_LIST,
                                                     this.server.getPeersList());
                 context.channel().writeAndFlush(reply.toString());
+            }
+            else if(response.getHeader().equals((PeerMessage.CTRL_REQUEST_CALL))) {
+                WifiDirectPeer fromPeer = peerChannels.get(context.channel().id().asLongText());
+                PeerMessage forward = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                      PeerMessage.CTRL_REQUEST_CALL,
+                                                      fromPeer.toString());
+                this.sendMessage(Integer.valueOf(response.getData()), forward);
+            }
+            else if(response.getHeader().equals(PeerMessage.CTRL_ACCEPT_CALL)) {
+                WifiDirectPeer fromPeer = peerChannels.get(context.channel().id().asLongText());
+                PeerMessage forward = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                      PeerMessage.CTRL_ACCEPT_CALL,
+                                                      fromPeer.toString());
+                this.sendMessage(Integer.valueOf(response.getData()), forward);
             }
             else if(response.getHeader().equals(PeerMessage.CTRL_QUIT)) {
                 this.server.removePeerById(Integer.valueOf(response.getData()));
@@ -93,6 +110,12 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
         this.server.trigger(cause.toString());
         this.closeChannel(context.channel());
+    }
+
+    public void sendMessage(int peerId, PeerMessage msg) {
+        WifiDirectPeer toPeer = this.server.getPeerById(peerId);
+        Channel channel = channels.find(toPeer.getChannelId());
+        channel.writeAndFlush(msg.toString());
     }
 
     public void broadcastMessage(PeerMessage msg) {

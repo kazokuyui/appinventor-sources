@@ -1,6 +1,7 @@
 package com.google.appinventor.components.runtime;
 
 import android.net.wifi.p2p.WifiP2pDevice;
+import io.netty.channel.ChannelId;
 
 import java.util.ArrayList;
 
@@ -17,6 +18,7 @@ public class WifiDirectPeer {
     private String macAddress;
     private String ipAddress;
     private int port;
+    private ChannelId channelId;
 
     public WifiDirectPeer(String rawPeer) {
         String[] parts = rawPeer.split("@");
@@ -67,6 +69,14 @@ public class WifiDirectPeer {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public ChannelId getChannelId() {
+        return this.channelId;
+    }
+
+    public void setChannelId(ChannelId channelId) {
+        this.channelId = channelId;
     }
 
     public String toString() {

@@ -58,6 +58,9 @@ public class TranslationComponentMethods {
     map.put("DiscoverDevices", MESSAGES.DiscoverDevicesMethods());
     map.put("RequestPeers", MESSAGES.RequestPeersMethods());
     map.put("SendData", MESSAGES.SendDataMethods());
+    map.put("CallPeer", MESSAGES.CallPeerMethods());
+    map.put("AcceptCall", MESSAGES.AcceptCallMethods());
+    map.put("EndCall", MESSAGES.EndCallMethods());
     map.put("IsDevicePaired", MESSAGES.IsDevicePairedMethods());
     map.put("ReceiveSigned1ByteNumber", MESSAGES.ReceiveSigned1ByteNumberMethods());
     map.put("ReceiveSigned2ByteNumber", MESSAGES.ReceiveSigned2ByteNumberMethods());

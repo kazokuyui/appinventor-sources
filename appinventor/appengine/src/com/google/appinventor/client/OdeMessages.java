@@ -2240,10 +2240,6 @@ public interface OdeMessages extends Messages {
   @Description("")
   String AllowCookiesProperties();
 
-  @DefaultMessage("IsWifiEnabled")
-  @Description("")
-  String IsWifiEnabledProperties();
-
   @DefaultMessage("Device")
   @Description("")
   String DeviceProperties();
@@ -3763,13 +3759,21 @@ public interface OdeMessages extends Messages {
   @Description("")
   String PeersChangedEvents();
 
-  @DefaultMessage("DataSent")
-  @Description("")
-  String DataSentEvents();
-
   @DefaultMessage("DataReceived")
   @Description("")
   String DataReceivedEvents();
+
+  @DefaultMessage("CallReceived")
+  @Description("")
+  String CallReceivedEvents();
+
+  @DefaultMessage("CallAccepted")
+  @Description("")
+  String CallAcceptedEvents();
+
+  @DefaultMessage("CallEnded")
+  @Description("")
+  String CallEndedEvents();
 
   @DefaultMessage("Trigger")
   @Description("")
@@ -4163,6 +4167,18 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("SendData")
   @Description("")
   String SendDataMethods();
+
+  @DefaultMessage("CallPeer")
+  @Description("")
+  String CallPeerMethods();
+
+  @DefaultMessage("AcceptCall")
+  @Description("")
+  String AcceptCallMethods();
+
+  @DefaultMessage("EndCall")
+  @Description("")
+  String EndCallMethods();
 
   @DefaultMessage("RequestPeers")
   @Description("")
