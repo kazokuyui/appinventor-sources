@@ -51,6 +51,10 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
                 WifiDirectPeer client = new WifiDirectPeer(response.getData());
                 this.client.callAccepted(client);
             }
+            else if(response.getHeader().equals(PeerMessage.CTRL_REJECT_CALL)) {
+                WifiDirectPeer client = new WifiDirectPeer(response.getData());
+                this.client.callRejected(client);
+            }
         }
         else if(response.getType() == PeerMessage.USER_DATA) {
             this.client.messageReceived(response.getHeader(), response.getData());
@@ -85,6 +89,13 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
     public void acceptCall(Channel serverChannel, int peerId) {
         PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA,
                                           PeerMessage.CTRL_ACCEPT_CALL,
+                                          Integer.toString(peerId));
+        serverChannel.writeAndFlush(msg.toString());
+    }
+
+    public void rejectCall(Channel serverChannel, int peerId) {
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                          PeerMessage.CTRL_REJECT_CALL,
                                           Integer.toString(peerId));
         serverChannel.writeAndFlush(msg.toString());
     }

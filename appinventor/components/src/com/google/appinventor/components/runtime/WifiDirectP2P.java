@@ -130,9 +130,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleEvent(description = "Channel is disconnected to the network; Triggered by Receiver.disconnect")
     public void DisconnectedToNetwork() {
         this.setStatus(Idle);
-        if(this.IsGroupOwner()) {
-            this.Trigger("GO DISCONNECT");
-        }
         EventDispatcher.dispatchEvent(this, "DisconnectedToNetwork");
     }
 
@@ -193,10 +190,17 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "CallReceived", peer);
     }
 
-    @SimpleEvent(description = "Call request received")
+    @SimpleEvent(description = "Call request accepted")
     public void CallAccepted(String peerIp) {
         this.startCall(peerIp);
-        EventDispatcher.dispatchEvent(this, "CallAccepted");
+        this.startCallReceiver();
+        EventDispatcher.dispatchEvent(this, "CallAccepted", peerIp);
+    }
+
+    @SimpleEvent(description = "Call request rejected")
+    public void CallRejected(String peer) {
+        this.stopCall();
+        EventDispatcher.dispatchEvent(this, "CallRejected", peer);
     }
 
     @SimpleEvent(description = "Call ended")
@@ -385,17 +389,27 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleFunction(description = "Send a call request to another peer")
     public void CallPeer(int peerId) {
         this.controlClient.requestCall(peerId);
+        this.startCallReceiver();
     }
 
-    @SimpleEvent(description = "Accept a call from a peer")
+    @SimpleFunction(description = "Accept a call from a peer")
     public void AcceptCall(int peerId) {
+        WifiDirectPeer callee = this.controlClient.getPeerById(peerId);
         this.controlClient.acceptCall(peerId);
         this.startCallReceiver();
+        this.startCall(callee.getIpAddress());
+    }
+
+    @SimpleFunction(description = "Reject a call from a peer")
+    public void RejectCall(int peerId) {
+        this.controlClient.rejectCall(peerId);
+        this.stopCallReceiver();
     }
 
     @SimpleFunction(description = "End Call")
     public void EndCall() {
-        this.isCalling = false;
+        this.stopCallReceiver();
+        this.stopCall();
     }
 
     @SimpleFunction(description = "Stop the client")
@@ -493,6 +507,10 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         });
     }
 
+    public void stopCallReceiver() {
+        this.isCalling = false;
+    }
+
     public void startCall(final String peerAddress) {
         AsynchUtil.runAsynchronously(new Runnable() {
             @Override
@@ -529,6 +547,10 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
                 }
             }
         });
+    }
+
+    public void stopCall() {
+        this.isCalling = false;
     }
 
     public void setDevice(WifiP2pDevice device) {

@@ -85,6 +85,13 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
                                                       fromPeer.toString());
                 this.sendMessage(Integer.valueOf(response.getData()), forward);
             }
+            else if(response.getHeader().equals(PeerMessage.CTRL_REJECT_CALL)) {
+                WifiDirectPeer fromPeer = peerChannels.get(context.channel().id().asLongText());
+                PeerMessage forward = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                      PeerMessage.CTRL_REJECT_CALL,
+                                                      fromPeer.toString());
+                this.sendMessage(Integer.valueOf(response.getData()), forward);
+            }
             else if(response.getHeader().equals(PeerMessage.CTRL_QUIT)) {
                 this.server.removePeerById(Integer.valueOf(response.getData()));
                 context.close();

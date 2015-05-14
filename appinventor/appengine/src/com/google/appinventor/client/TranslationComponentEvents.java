@@ -150,6 +150,7 @@ public class TranslationComponentEvents {
     map.put("DataReceived", MESSAGES.DataReceivedEvents());
     map.put("CallReceived", MESSAGES.CallReceivedEvents());
     map.put("CallAccepted", MESSAGES.CallAcceptedEvents());
+    map.put("CallRejected", MESSAGES.CallRejectedEvents());
     map.put("CallEnded", MESSAGES.CallEndedEvents());
     map.put("Trigger", MESSAGES.TriggerEvents());
 	/*

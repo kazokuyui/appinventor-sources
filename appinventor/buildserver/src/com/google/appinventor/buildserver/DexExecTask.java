@@ -205,6 +205,7 @@ public class DexExecTask  {
         }
 
         commandLineList.add("--output=" + output);
+        commandLineList.add("--force-jumbo");
 
         for (File input : inputs) {
             String absPath = input.getAbsolutePath();

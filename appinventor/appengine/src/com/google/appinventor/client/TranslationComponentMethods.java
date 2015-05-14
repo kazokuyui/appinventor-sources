@@ -60,6 +60,7 @@ public class TranslationComponentMethods {
     map.put("SendData", MESSAGES.SendDataMethods());
     map.put("CallPeer", MESSAGES.CallPeerMethods());
     map.put("AcceptCall", MESSAGES.AcceptCallMethods());
+    map.put("RejectCall", MESSAGES.RejectCallMethods());
     map.put("EndCall", MESSAGES.EndCallMethods());
     map.put("IsDevicePaired", MESSAGES.IsDevicePairedMethods());
     map.put("ReceiveSigned1ByteNumber", MESSAGES.ReceiveSigned1ByteNumberMethods());

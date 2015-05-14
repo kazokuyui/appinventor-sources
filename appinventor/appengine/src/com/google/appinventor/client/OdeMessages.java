@@ -3771,6 +3771,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String CallAcceptedEvents();
 
+  @DefaultMessage("CallRejected")
+  @Description("")
+  String CallRejectedEvents();
+
   @DefaultMessage("CallEnded")
   @Description("")
   String CallEndedEvents();
@@ -4175,6 +4179,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("AcceptCall")
   @Description("")
   String AcceptCallMethods();
+
+  @DefaultMessage("RejectCall")
+  @Description("")
+  String RejectCallMethods();
 
   @DefaultMessage("EndCall")
   @Description("")

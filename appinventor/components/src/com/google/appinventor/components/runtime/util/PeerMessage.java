@@ -17,6 +17,7 @@ public class PeerMessage {
     public static final String CTRL_PEERS_CHANGE = "PEERS_CHANGE";
     public static final String CTRL_REQUEST_CALL = "CALL_REQUEST";
     public static final String CTRL_ACCEPT_CALL = "CALL_ACCEPT";
+    public static final String CTRL_REJECT_CALL = "CALL_REJECT";
     public static final String CTRL_QUIT = "QUIT";
     public static final String USR_MESSAGE = "MESSAGE";
 
