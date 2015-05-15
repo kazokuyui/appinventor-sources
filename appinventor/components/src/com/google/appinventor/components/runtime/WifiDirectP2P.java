@@ -516,14 +516,14 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
             @Override
             public void run() {
                 int minBufSize = AudioRecord.getMinBufferSize(callFreqRate,
-                        AudioFormat.CHANNEL_IN_MONO,
-                        AudioFormat.ENCODING_PCM_16BIT) * 10;
+                                                              AudioFormat.CHANNEL_IN_MONO,
+                                                              AudioFormat.ENCODING_PCM_16BIT) * 10;
 
-                AudioRecord audioRecorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
-                        callFreqRate,
-                        AudioFormat.CHANNEL_IN_MONO,
-                        AudioFormat.ENCODING_PCM_16BIT,
-                        minBufSize);
+                AudioRecord audioRecorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                                                            callFreqRate,
+                                                            AudioFormat.CHANNEL_IN_MONO,
+                                                            AudioFormat.ENCODING_PCM_16BIT,
+                                                            minBufSize);
 
                 byte[] buf = new byte[callBufferSize];
                 int bytes_read = 0;
@@ -541,6 +541,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
                             Thread.sleep(callVoiceInterval, 0);
                         }
                     }
+                    audioRecorder.stop();
                     audioRecorder.release();
                 } catch (Exception e) {
                     e.printStackTrace();
