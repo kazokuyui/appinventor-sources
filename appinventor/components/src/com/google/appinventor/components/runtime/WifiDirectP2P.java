@@ -12,6 +12,7 @@ import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.util.AsynchUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.PeerMessage;
+import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
 import java.io.*;
 import java.net.*;
@@ -191,10 +192,10 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     @SimpleEvent(description = "Call request accepted")
-    public void CallAccepted(String peerIp) {
-        this.startCall(peerIp);
+    public void CallAccepted(String peer) {
+        this.startCall(WifiDirectUtil.getPeerIp(peer));
         this.startCallReceiver();
-        EventDispatcher.dispatchEvent(this, "CallAccepted", peerIp);
+        EventDispatcher.dispatchEvent(this, "CallAccepted", peer);
     }
 
     @SimpleEvent(description = "Call request rejected")

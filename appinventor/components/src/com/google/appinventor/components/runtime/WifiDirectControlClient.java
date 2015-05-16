@@ -171,7 +171,7 @@ public class WifiDirectControlClient implements Runnable {
         this.handler.post(new Runnable() {
             @Override
             public void run() {
-                WifiDirectControlClient.this.p2p.CallAccepted(peer.getIpAddress());
+                WifiDirectControlClient.this.p2p.CallAccepted(peer.toString());
             }
         });
     }
