@@ -1,6 +1,5 @@
 package com.google.appinventor.components.runtime;
 
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.os.Handler;
 import com.google.appinventor.components.runtime.util.PeerMessage;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;

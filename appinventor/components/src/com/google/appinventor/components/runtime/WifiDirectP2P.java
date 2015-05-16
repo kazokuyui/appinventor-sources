@@ -11,7 +11,6 @@ import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.util.AsynchUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
-import com.google.appinventor.components.runtime.util.PeerMessage;
 import com.google.appinventor.components.runtime.util.WifiDirectUtil;
 
 import java.io.*;
@@ -416,6 +415,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleFunction(description = "Stop the client")
     public void Disconnect() {
         this.controlClient.stop();
+        if(this.IsGroupOwner()) {
+            this.groupServer.stop();
+        }
     }
 
     @Override
@@ -527,7 +529,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
                                                             minBufSize);
 
                 byte[] buf = new byte[callBufferSize];
-                int bytes_read = 0;
+                int bytes_read;
                 try {
                     InetAddress address = InetAddress.getByName(peerAddress);
                     DatagramSocket socket = new DatagramSocket();
