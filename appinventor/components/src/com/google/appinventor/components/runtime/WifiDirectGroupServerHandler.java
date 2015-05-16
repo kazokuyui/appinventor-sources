@@ -1,5 +1,6 @@
 package com.google.appinventor.components.runtime;
 
+import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.PeerMessage;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
@@ -115,7 +116,7 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
-        this.server.trigger(cause.toString());
+        this.server.errorOccurred("Server Handler", ErrorMessages.ERROR_WIFIDIRECT_SERVER_FAILED, cause.getMessage());
         this.closeChannel(context.channel());
     }
 

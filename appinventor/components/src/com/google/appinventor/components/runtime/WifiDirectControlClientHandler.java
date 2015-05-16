@@ -1,5 +1,6 @@
 package com.google.appinventor.components.runtime;
 
+import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.PeerMessage;
 import io.netty.channel.*;
 
@@ -68,7 +69,7 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        this.client.trigger(cause.toString());
+        this.client.errorOccurred("Client Handler", ErrorMessages.ERROR_WIFIDIRECT_CLIENT_FAILED, cause.getMessage());
         ctx.close();
     }
 

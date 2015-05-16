@@ -203,6 +203,15 @@ public class WifiDirectControlClient implements Runnable {
         });
     }
 
+    public void errorOccurred(final String functionName, final int errorCode, final String cause) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectControlClient.this.p2p.wifiDirectError(functionName, errorCode, cause);
+            }
+        });
+    }
+
     /* Setters and Getters */
     public SslContext initiateSsl() {
         if (WifiDirectUtil.SSL) {

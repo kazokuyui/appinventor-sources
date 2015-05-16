@@ -153,6 +153,15 @@ public class WifiDirectGroupServer implements Runnable {
         this.serverHandler.broadcastMessage(msg);
     }
 
+    public void errorOccurred(final String functionName, final int errorCode, final String cause) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectGroupServer.this.p2p.wifiDirectError(functionName, errorCode, cause);
+            }
+        });
+    }
+
     /* Setters and Getters */
     public SslContext initiateSsl() {
         if (WifiDirectUtil.SSL) {
