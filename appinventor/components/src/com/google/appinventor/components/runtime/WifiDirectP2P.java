@@ -115,6 +115,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     @SimpleEvent(description = "All network information is now available; Triggered next to ConnectedToNetwork")
     public void NetworkInfoAvailable() {
+        this.setStatus(Registered);
         EventDispatcher.dispatchEvent(this, "NetworkInfoAvailable");
     }
 
