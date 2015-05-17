@@ -88,6 +88,7 @@ public class WifiDirectGroupServer implements Runnable {
     }
 
     public void stop() {
+        this.isAccepting = false;
         this.bossGroup.shutdownGracefully();
         this.workerGroup.shutdownGracefully();
     }
@@ -96,9 +97,6 @@ public class WifiDirectGroupServer implements Runnable {
         peer.setId(this.activePeers.size() + 1);
         this.activePeers.add(peer);
         this.peerRegistered(peer);
-//        if(peer.getId() > 1) {
-//            this.peersChanged();
-//        }
     }
 
     public WifiDirectPeer getPeerById(int peerId) {

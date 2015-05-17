@@ -112,6 +112,7 @@ public class WifiDirectControlClient implements Runnable {
     public void stop() {
         this.clientHandler.quit(this.serverChannel);
         this.group.shutdownGracefully();
+        this.isRunning = false;
         this.deviceDisconnected();
     }
 

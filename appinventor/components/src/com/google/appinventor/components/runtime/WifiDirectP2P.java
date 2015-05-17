@@ -80,16 +80,8 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private WifiDirectP2P(Form form, String TAG) {
         super(form);
         this.TAG = TAG;
-        this.manager = (WifiP2pManager) form.getSystemService(Context.WIFI_P2P_SERVICE);
-        this.channel = this.manager.initialize(form, form.getMainLooper(), null);
-        this.receiver = new WifiDirectBroadcastReceiver(this.manager, this.channel, this);
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        form.registerReceiver(this.receiver, intentFilter);
+        this.initializeChannel();
 
         this.handler = new Handler();
         this.status = Idle;
@@ -123,13 +115,16 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     @SimpleEvent(description = "All network information is now available; Triggered next to ConnectedToNetwork")
     public void NetworkInfoAvailable() {
-        this.setStatus(Registered);
         EventDispatcher.dispatchEvent(this, "NetworkInfoAvailable");
     }
 
     @SimpleEvent(description = "Channel is disconnected to the network; Triggered by Receiver.disconnect")
     public void DisconnectedToNetwork() {
         this.setStatus(Idle);
+        if(this.IsGroupOwner()) {
+            this.groupServer.stop();
+        }
+        this.controlClient.stop();
         EventDispatcher.dispatchEvent(this, "DisconnectedToNetwork");
     }
 
@@ -342,21 +337,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     /* Component Functions */
-    @SimpleFunction(description = "Scan all devices nearby")
-    public void DiscoverDevices() {
-        this.manager.discoverPeers(this.channel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-
-            }
-
-            @Override
-            public void onFailure(int reason) {
-
-            }
-        });
-    }
-
     @SimpleFunction(description = "Connect to a certain device")
     public void Connect(String MACAddress) {
         WifiP2pConfig config = new WifiP2pConfig();
@@ -369,6 +349,29 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
             @Override
             public void onFailure(int i) {
+
+            }
+        });
+    }
+
+    @SimpleFunction(description = "Stop the client")
+    public void Disconnect() {
+        this.controlClient.stop();
+        if(this.IsGroupOwner()) {
+            this.groupServer.stop();
+        }
+    }
+
+    @SimpleFunction(description = "Scan all devices nearby")
+    public void DiscoverDevices() {
+        this.manager.discoverPeers(this.channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onFailure(int reason) {
 
             }
         });
@@ -412,14 +415,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.stopCall();
     }
 
-    @SimpleFunction(description = "Stop the client")
-    public void Disconnect() {
-        this.controlClient.stop();
-        if(this.IsGroupOwner()) {
-            this.groupServer.stop();
-        }
-    }
-
     @Override
     public void onDelete() {
 
@@ -428,6 +423,19 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @Override
     public void onDestroy() {
 
+    }
+
+    public void initializeChannel() {
+        this.manager = (WifiP2pManager) form.getSystemService(Context.WIFI_P2P_SERVICE);
+        this.channel = this.manager.initialize(form, form.getMainLooper(), null);
+        this.receiver = new WifiDirectBroadcastReceiver(this.manager, this.channel, this);
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        form.registerReceiver(this.receiver, intentFilter);
     }
 
     public void requestConnectionInfo(){
