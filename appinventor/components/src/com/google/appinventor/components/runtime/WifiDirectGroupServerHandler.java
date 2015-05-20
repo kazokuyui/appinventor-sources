@@ -66,10 +66,27 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
                     }
                 });
             }
+            if(response.getHeader().equals(PeerMessage.CTRL_RECONNECT)) {
+                WifiDirectPeer reconnectingPeer = new WifiDirectPeer(response.getData());
+                final WifiDirectPeer original = this.server.reconnectPeer(reconnectingPeer);
+                original.setChannelId(context.channel().id());
+                PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                    PeerMessage.CTRL_RECONNECTED,
+                                                    "NONE");
+                ChannelFuture f = context.channel().writeAndFlush(reply.toString());
+                f.addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                        channels.add(context.channel());
+                        WifiDirectGroupServerHandler.this.peerChannels.put(context.channel().id().asLongText(), original);
+                        WifiDirectGroupServerHandler.this.server.peersChanged();
+                    }
+                });
+            }
             else if(response.getHeader().equals(PeerMessage.CTRL_REQUEST_PEER)) {
                 PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
                                                     PeerMessage.CTRL_PEERS_LIST,
-                                                    this.server.getPeersList());
+                                                    this.server.getActivePeersList());
                 context.channel().writeAndFlush(reply.toString());
             }
             else if(response.getHeader().equals((PeerMessage.CTRL_REQUEST_CALL))) {
@@ -92,6 +109,22 @@ public class WifiDirectGroupServerHandler extends ChannelInboundHandlerAdapter {
                                                       PeerMessage.CTRL_REJECT_CALL,
                                                       fromPeer.toString());
                 this.sendMessage(Integer.valueOf(response.getData()), forward);
+            }
+            else if(response.getHeader().equals(PeerMessage.CTRL_REQUEST_INACTIVITY)) {
+                WifiDirectPeer peer = peerChannels.get(context.channel().id().asLongText());
+                this.server.permitInactivity(peer.getId());
+                PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                    PeerMessage.CTRL_ACCEPT_INACTIVITY,
+                                                    response.getData());
+                ChannelFuture f = context.channel().writeAndFlush(reply.toString());
+                f.addListener(new ChannelFutureListener() {
+                    @Override
+                    public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                        WifiDirectGroupServerHandler.this.peerChannels.remove(context.channel().id().asLongText());
+                        context.channel().close();
+                        WifiDirectGroupServerHandler.this.server.peersChanged();
+                    }
+                });
             }
             else if(response.getHeader().equals(PeerMessage.CTRL_QUIT)) {
                 this.server.removePeerById(Integer.valueOf(response.getData()));

@@ -11,6 +11,8 @@ public class PeerMessage {
     public static final int CONTROL_DATA = 1002;
     public static final String CTRL_CONNECTED = "CONNECTED";
     public static final String CTRL_REGISTER = "REGISTER";
+    public static final String CTRL_RECONNECT = "RECONNECT";
+    public static final String CTRL_RECONNECTED = "RECONNECTED";
     public static final String CTRL_REGISTERED = "REGISTERED";
     public static final String CTRL_REQUEST_PEER = "REQUEST_PEER";
     public static final String CTRL_PEERS_LIST = "PEERS_LIST";
@@ -18,6 +20,8 @@ public class PeerMessage {
     public static final String CTRL_REQUEST_CALL = "CALL_REQUEST";
     public static final String CTRL_ACCEPT_CALL = "CALL_ACCEPT";
     public static final String CTRL_REJECT_CALL = "CALL_REJECT";
+    public static final String CTRL_REQUEST_INACTIVITY = "REQUEST_INACTIVITY";
+    public static final String CTRL_ACCEPT_INACTIVITY = "ACCEPT_INACTIVITY";
     public static final String CTRL_QUIT = "QUIT";
     public static final String USR_MESSAGE = "MESSAGE";
 

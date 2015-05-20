@@ -89,6 +89,11 @@ public class WifiDirectControlClient implements Runnable {
         }
     }
 
+    public void reinitialize() {
+        this.group = new NioEventLoopGroup();
+        this.clientHandler = new WifiDirectControlClientHandler(this);
+    }
+
     public void requestPeers() {
         this.clientHandler.requestPeers(this.serverChannel);
     }
@@ -107,6 +112,10 @@ public class WifiDirectControlClient implements Runnable {
 
     public void sendMessage(String msg) {
         this.clientHandler.sendMessage(this.serverChannel, msg);
+    }
+
+    public void requestInactivity() {
+        this.clientHandler.requestInactivity(this.serverChannel, "TEMPORARY_MAC");
     }
 
     public void stop() {
@@ -132,10 +141,20 @@ public class WifiDirectControlClient implements Runnable {
     public void peerRegistered(final int id) {
         this.status = PeerMessage.CTRL_REGISTERED;
         this.mPeer.setId(id);
+        this.mPeer.setStatus(WifiDirectPeer.PEER_STATUS_ACTIVE);
         this.handler.post(new Runnable() {
             @Override
             public void run() {
                 WifiDirectControlClient.this.p2p.DeviceRegistered(id);
+            }
+        });
+    }
+
+    public void peerReconnected() {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectControlClient.this.p2p.DeviceReconnected();
             }
         });
     }
@@ -186,6 +205,18 @@ public class WifiDirectControlClient implements Runnable {
         });
     }
 
+    public void inactivityAccepted(String macAddress) {
+        this.mPeer.setStatus(WifiDirectPeer.PEER_STATUS_INACTIVE);
+        this.group.shutdownGracefully();
+        this.isRunning = false;
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectControlClient.this.p2p.temporaryDisconnect();
+            }
+        });
+    }
+
     public void deviceDisconnected() {
         this.handler.post(new Runnable() {
             @Override
@@ -226,6 +257,14 @@ public class WifiDirectControlClient implements Runnable {
         }
 
         return null;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public int getPort() {
+        return this.port;
     }
 
     public void setHandler(Handler uiHandler) {

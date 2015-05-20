@@ -13,12 +13,16 @@ import java.util.ArrayList;
  */
 
 public class WifiDirectPeer {
+    public static final int PEER_STATUS_ACTIVE = 2001;
+    public static final int PEER_STATUS_INACTIVE = 2002;
+
     private int id;
     private String name;
     private String macAddress;
     private String ipAddress;
     private int port;
     private ChannelId channelId;
+    private int status;
 
     public WifiDirectPeer(String rawPeer) {
         String[] parts = rawPeer.split("@");
@@ -81,5 +85,13 @@ public class WifiDirectPeer {
 
     public String toString() {
         return this.name+":"+this.id+"@"+this.macAddress+"@"+this.ipAddress+":"+this.port;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }

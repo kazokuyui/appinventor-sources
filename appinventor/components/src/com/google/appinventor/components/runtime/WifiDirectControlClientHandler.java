@@ -33,10 +33,16 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
                 PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
                                                     PeerMessage.CTRL_REGISTER,
                                                     this.client.getmPeer().toString());
+                if(this.client.getmPeer().getStatus() == WifiDirectPeer.PEER_STATUS_INACTIVE) {
+                    reply.setHeader(PeerMessage.CTRL_RECONNECT);
+                }
                 ctx.channel().writeAndFlush(reply.toString());
             }
             else if(response.getHeader().equals(PeerMessage.CTRL_REGISTERED)) {
                 this.client.peerRegistered(Integer.parseInt(response.getData()));
+            }
+            else if(response.getHeader().equals(PeerMessage.CTRL_RECONNECTED)) {
+                this.client.peerReconnected();
             }
             else if(response.getHeader().equals(PeerMessage.CTRL_PEERS_LIST)) {
                 this.client.peersAvailable(this.getPeersList(response.getData()));
@@ -55,6 +61,9 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
             else if(response.getHeader().equals(PeerMessage.CTRL_REJECT_CALL)) {
                 WifiDirectPeer client = new WifiDirectPeer(response.getData());
                 this.client.callRejected(client);
+            }
+            else if(response.getHeader().equals(PeerMessage.CTRL_ACCEPT_INACTIVITY)) {
+                this.client.inactivityAccepted(response.getData());
             }
         }
         else if(response.getType() == PeerMessage.USER_DATA) {
@@ -103,6 +112,13 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
 
     public void sendMessage(Channel serverChannel, String text) {
         PeerMessage msg = new PeerMessage(PeerMessage.USER_DATA, PeerMessage.USR_MESSAGE, text);
+        serverChannel.writeAndFlush(msg.toString());
+    }
+
+    public void requestInactivity(Channel serverChannel, String macAddress) {
+        PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                          PeerMessage.CTRL_REQUEST_INACTIVITY,
+                                          macAddress);
         serverChannel.writeAndFlush(msg.toString());
     }
 

@@ -141,10 +141,13 @@ public class TranslationComponentEvents {
     map.put("NetworkInfoAvailable", MESSAGES.NetworkInfoAvailableEvents());
     map.put("DisconnectedToNetwork", MESSAGES.DisconnectedToNetworkEvents());
     map.put("DeviceConnected", MESSAGES.DeviceConnectedEvents());
+    map.put("DeviceReconnected", MESSAGES.DeviceReconnectedEvents());
     map.put("DeviceRegistered", MESSAGES.DeviceRegisteredEvents());
+    map.put("DeviceInactive", MESSAGES.DeviceInactiveEvents());
     map.put("DeviceDisconnected", MESSAGES.DeviceDisconnectedEvents());
     map.put("GoServerStarted", MESSAGES.GoServerStartedEvents());
     map.put("ConnectionRegistered", MESSAGES.ConnectionRegisteredEvents());
+    map.put("ConnectionReconnected", MESSAGES.ConnectionReconnectedEvents());
     map.put("PeersAvailable", MESSAGES.PeersAvailableEvents());
     map.put("PeersChanged", MESSAGES.PeersChangedEvents());
     map.put("DataReceived", MESSAGES.DataReceivedEvents());

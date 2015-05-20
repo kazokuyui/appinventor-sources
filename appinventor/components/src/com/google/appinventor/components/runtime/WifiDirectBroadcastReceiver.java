@@ -48,7 +48,12 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
             }
 
             if (networkInfo.isConnected()) {
-                this.main.ConnectedToNetwork();
+                if(this.main.isReleased()) {
+                    this.main.reconnectedToNetwork();
+                }
+                else {
+                    this.main.ConnectedToNetwork();
+                }
             }
         }
         else if(WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
@@ -93,7 +98,12 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
             manager.removeGroup(this.channel, new ActionListener() {
                 @Override
                 public void onSuccess() {
-                    WifiDirectBroadcastReceiver.this.main.DisconnectedToNetwork();
+                    if(WifiDirectBroadcastReceiver.this.main.isReleased()) {
+                        WifiDirectBroadcastReceiver.this.main.DeviceInactive();
+                    }
+                    else {
+                        WifiDirectBroadcastReceiver.this.main.DisconnectedToNetwork();
+                    }
                 }
 
                 @Override

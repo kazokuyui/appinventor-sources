@@ -95,8 +95,22 @@ public class WifiDirectGroupServer implements Runnable {
 
     public void registerPeer(WifiDirectPeer peer) {
         peer.setId(this.activePeers.size() + 1);
+        peer.setStatus(WifiDirectPeer.PEER_STATUS_ACTIVE);
         this.activePeers.add(peer);
         this.peerRegistered(peer);
+    }
+
+    public WifiDirectPeer reconnectPeer(WifiDirectPeer reconnectingPeer) {
+        WifiDirectPeer originalPeer = this.getPeerById(reconnectingPeer.getId());
+        originalPeer.setIpAddress(reconnectingPeer.getIpAddress());
+        originalPeer.setStatus(WifiDirectPeer.PEER_STATUS_ACTIVE);
+        this.peerReconnected(originalPeer);
+        return originalPeer;
+    }
+
+    public void permitInactivity(int peerId) {
+        WifiDirectPeer peer = this.getPeerById(peerId);
+        peer.setStatus(WifiDirectPeer.PEER_STATUS_INACTIVE);
     }
 
     public WifiDirectPeer getPeerById(int peerId) {
@@ -146,6 +160,15 @@ public class WifiDirectGroupServer implements Runnable {
         });
     }
 
+    public void peerReconnected(final WifiDirectPeer peer) {
+        this.handler.post(new Runnable() {
+            @Override
+            public void run() {
+                WifiDirectGroupServer.this.p2p.ConnectionReconnected(peer.getName());
+            }
+        });
+    }
+
     public void peersChanged() {
         PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, PeerMessage.CTRL_PEERS_CHANGE, " ");
         this.serverHandler.broadcastMessage(msg);
@@ -180,6 +203,21 @@ public class WifiDirectGroupServer implements Runnable {
 
     public void setServerHandler(WifiDirectGroupServerHandler serverHandler) {
         this.serverHandler = serverHandler;
+    }
+
+    public String getActivePeersList() {
+        String peerList = "";
+        if(!this.activePeers.isEmpty()) {
+            for (WifiDirectPeer peer : this.activePeers) {
+                if(peer.getStatus() == WifiDirectPeer.PEER_STATUS_ACTIVE) {
+                    peerList += peer+",";
+                }
+            }
+        }
+        else {
+            peerList = "NIL";
+        }
+        return peerList;
     }
 
     public String getPeersList() {

@@ -53,6 +53,9 @@ public class TranslationComponentMethods {
     map.put("PointTowards", MESSAGES.PointTowardsMethods());
     map.put("BytesAvailableToReceive", MESSAGES.BytesAvailableToReceiveMethods());
     map.put("Connect", MESSAGES.ConnectMethods());
+    map.put("Reconnect", MESSAGES.ReconnectMethods());
+    map.put("RequestInactive", MESSAGES.RequestInactiveMethods());
+    map.put("ConnectToOther", MESSAGES.ConnectToOtherMethods());
     map.put("ConnectWithUUID", MESSAGES.ConnectWithUUIDMethods());
     map.put("Disconnect", MESSAGES.DisconnectMethods());
     map.put("DiscoverDevices", MESSAGES.DiscoverDevicesMethods());

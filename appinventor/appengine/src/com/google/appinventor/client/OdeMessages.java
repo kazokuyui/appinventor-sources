@@ -3737,6 +3737,14 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DeviceRegisteredEvents();
 
+  @DefaultMessage("DeviceReconnected")
+  @Description("")
+  String DeviceReconnectedEvents();
+
+  @DefaultMessage("DeviceInactive")
+  @Description("")
+  String DeviceInactiveEvents();
+
   @DefaultMessage("DeviceDisconnected")
   @Description("")
   String DeviceDisconnectedEvents();
@@ -3749,6 +3757,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("ConnectionRegistered")
   @Description("")
   String ConnectionRegisteredEvents();
+
+  @DefaultMessage("ConnectionReconnected")
+  @Description("")
+  String ConnectionReconnectedEvents();
 
   //WifiDirect Core
   @DefaultMessage("PeersAvailable")
@@ -4155,6 +4167,17 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Connect")
   @Description("")
   String ConnectMethods();
+
+  @DefaultMessage("Reconnect")
+  @Description("")
+  String ReconnectMethods();
+
+  @DefaultMessage("RequestInactive")
+  @Description("")
+  String RequestInactiveMethods();
+  @DefaultMessage("ConnectToOther")
+  @Description("")
+  String ConnectToOtherMethods();
 
   @DefaultMessage("ConnectWithUUID")
   @Description("")

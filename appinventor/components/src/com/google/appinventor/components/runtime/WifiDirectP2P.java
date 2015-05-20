@@ -47,10 +47,11 @@ import static com.google.appinventor.components.runtime.util.WifiDirectUtil.*;
 @SimpleObject
 public class WifiDirectP2P extends AndroidNonvisibleComponent implements Component, OnDestroyListener, Deleteable {
     public String TAG;
+
     public enum Status {
         Idle, Available, Unavailable,
         Invited, NetworkConnected, Connected,
-        Registered, Ready, Failed
+        Registered, Inactive, Failed
     }
 
     /* Network layer for WifiDirect access */
@@ -60,6 +61,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     /* WifiDirect Info for this Device */
     private WifiP2pDevice mDevice;
     private WifiP2pDevice mGroupOwner;
+    private String originalGoMac;
     private WifiP2pGroup mGroup;
     private WifiP2pInfo mConnectionInfo;
 
@@ -71,6 +73,8 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private Handler handler;
     private Status status;
     private boolean isCalling;
+    private boolean isReleased;
+    private String newPeerMacAddress;
 
     public WifiDirectP2P(ComponentContainer container) {
         this(container.$form(), "WifiDirectP2P");
@@ -86,6 +90,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.handler = new Handler();
         this.status = Idle;
         this.isCalling = false;
+        this.isReleased = false;
     }
 
     /* Network Layer Events */
@@ -136,10 +141,23 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "DeviceConnected", ipAddress);
     }
 
+    @SimpleEvent(description = "Device reconnected to the Group Owner Server; Triggered by ControlClient.peerReconnected")
+    public void DeviceReconnected() {
+        this.setStatus(Registered);
+        this.isReleased = false;
+        EventDispatcher.dispatchEvent(this, "DeviceReconnected");
+    }
+
     @SimpleEvent(description = "Device is now registered to the Group Owner Server; Triggered by ControlClient.peerRegistered")
     public void DeviceRegistered(int deviceId) {
         this.setStatus(Registered);
         EventDispatcher.dispatchEvent(this, "DeviceRegistered", deviceId);
+    }
+
+    @SimpleEvent(description = "Device is now inactive; ")
+    public void DeviceInactive() {
+        this.setStatus(Inactive);
+        EventDispatcher.dispatchEvent(this, "DeviceInactive");
     }
 
     @SimpleEvent(description = "Device is now disconnected to the Group Owner Server ")
@@ -163,6 +181,11 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     @SimpleEvent(description = "Connection of a peer is registered by the Group Owner Server; Triggered by GroupServer.peerRegistered")
     public void ConnectionRegistered(String deviceName) {
         EventDispatcher.dispatchEvent(this, "ConnectionRegistered", deviceName);
+    }
+
+    @SimpleEvent(description = "Connection of a peer is reconnected to the Group Owner Server; Triggered by GroupServer.peerReconnected")
+    public void ConnectionReconnected(String deviceName) {
+        EventDispatcher.dispatchEvent(this, "ConnectionReconnected", deviceName);
     }
 
     /* Core Events of the framework for Peer-to-Peer communication */
@@ -242,8 +265,8 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
                 return "Connected";
             case Registered:
                 return "Registered";
-            case Ready:
-                return "Ready";
+            case Inactive:
+                return "Inactive";
             case Failed:
                 return "Failed";
             default:
@@ -339,20 +362,27 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     /* Component Functions */
     @SimpleFunction(description = "Connect to a certain device")
-    public void Connect(String MACAddress) {
+    public void Connect(String macAddress) {
         WifiP2pConfig config = new WifiP2pConfig();
-        config.deviceAddress = MACAddress;
-        this.manager.connect(this.channel, config, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
+        config.deviceAddress = macAddress;
+        this.connectToDevice(config);
+    }
 
-            }
+    @SimpleFunction(description = "Reconnect to original Group Owner")
+    public void Reconnect() {
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = this.originalGoMac;
+        this.connectToDevice(config);
+    }
 
-            @Override
-            public void onFailure(int i) {
+    @SimpleFunction(description = "Become inactive in the network")
+    public void RequestInactive() {
+        this.controlClient.requestInactivity();
+    }
 
-            }
-        });
+    @SimpleFunction(description = "Connect to a foreign device")
+    public void ConnectToOther(String macAddress) {
+
     }
 
     @SimpleFunction(description = "Stop the client")
@@ -439,6 +469,20 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         form.registerReceiver(this.receiver, intentFilter);
     }
 
+    public void connectToDevice(WifiP2pConfig config) {
+        this.manager.connect(this.channel, config, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onFailure(int i) {
+
+            }
+        });
+    }
+
     public void requestConnectionInfo(){
         this.manager.requestConnectionInfo(this.channel, this.receiver);
     }
@@ -449,14 +493,19 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     public void groupInfoAvailable() {
         this.NetworkInfoAvailable();
-        if(this.mConnectionInfo.isGroupOwner) {
-            if(this.groupServer == null || !this.groupServer.isAccepting) {
-                this.startGoServer();
-            }
+        if(this.isReleased) {
+            this.reconnectClient();
         }
+        else {
+            if(this.mConnectionInfo.isGroupOwner) {
+                if(this.groupServer == null || !this.groupServer.isAccepting) {
+                    this.startGoServer();
+                }
+            }
 
-        if(this.controlClient == null || !this.controlClient.isRunning) {
-            this.startClient(groupServerPort);
+            if(this.controlClient == null || !this.controlClient.isRunning) {
+                this.startClient(groupServerPort);
+            }
         }
     }
 
@@ -487,6 +536,17 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
                     ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
                     e.getMessage());
         }
+    }
+
+    public void reconnectClient() {
+        WifiDirectPeer peer = this.controlClient.getmPeer();
+        WifiDirectPeer newPeer = new WifiDirectPeer(this.mDevice, userServerPort);
+        newPeer.setId(peer.getId());
+        newPeer.setIpAddress(peer.getIpAddress());
+        newPeer.setStatus(WifiDirectPeer.PEER_STATUS_INACTIVE);
+        this.controlClient.setmPeer(newPeer);
+        this.controlClient.reinitialize();
+        AsynchUtil.runAsynchronously(this.controlClient);
     }
 
     public void startCallReceiver() {
@@ -566,6 +626,16 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.isCalling = false;
     }
 
+    public void reconnectedToNetwork() {
+        this.requestConnectionInfo();
+    }
+
+    public void temporaryDisconnect() {
+        this.isReleased = true;
+        this.originalGoMac = this.mGroupOwner.deviceAddress;
+        this.receiver.disconnect();
+    }
+
     public void setDevice(WifiP2pDevice device) {
         this.mDevice = device;
     }
@@ -585,6 +655,10 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public boolean isReleased() {
+        return this.isReleased;
     }
 
     public void wifiDirectError(String functionName, int errorCode, Object... args) {
