@@ -21,6 +21,13 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Collection;
 
+/**
+ * Java NIO Client for WifiDirect Component
+ *
+ * @author nmcalabroso@up.edu.ph (neil)
+ * @author erbunao@up.edu.ph (earle)
+ */
+
 public class WifiDirectControlClient implements Runnable {
     private WifiDirectP2P p2p;
     private Handler handler;
@@ -32,10 +39,12 @@ public class WifiDirectControlClient implements Runnable {
     private InetAddress hostAddress;
     private int port;
     private Collection<WifiDirectPeer> peers;
+    private Collection<PeerMessage> messages;
 
     private EventLoopGroup group;
 
     public boolean isRunning;
+    public boolean isGatewayConnected;
 
     public WifiDirectControlClient(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
@@ -44,6 +53,7 @@ public class WifiDirectControlClient implements Runnable {
         this.group = new NioEventLoopGroup();
         this.clientHandler = new WifiDirectControlClientHandler(this);
         this.isRunning = false;
+        this.isGatewayConnected = false;
     }
 
     public void run() {
@@ -53,6 +63,7 @@ public class WifiDirectControlClient implements Runnable {
             final SslContext finalSslCtx = sslCtx;
             b.group(this.group);
             b.option(ChannelOption.SO_KEEPALIVE, true);
+            b.option(ChannelOption.SO_REUSEADDR, true);
             b.channel(NioSocketChannel.class);
             b.handler(new LoggingHandler(LogLevel.INFO));
             b.handler(new ChannelInitializer<SocketChannel>() {
@@ -279,6 +290,14 @@ public class WifiDirectControlClient implements Runnable {
         return status;
     }
 
+    public void setPeers(Collection<WifiDirectPeer> peers) {
+        this.peers = peers;
+    }
+
+    public void setMessages(Collection<PeerMessage> messages) {
+        this.messages = messages;
+    }
+
     public void setStatus(String status) {
         this.status = status;
     }
@@ -293,6 +312,10 @@ public class WifiDirectControlClient implements Runnable {
 
     public Collection<WifiDirectPeer> getPeers() {
         return this.peers;
+    }
+
+    public Collection<PeerMessage> getMessages() {
+        return this.messages;
     }
 
     public WifiDirectPeer getPeerById(int peerId) {

@@ -10,6 +10,8 @@ public class PeerMessage {
     public static final int USER_DATA = 1001;
     public static final int CONTROL_DATA = 1002;
     public static final String CTRL_CONNECTED = "CONNECTED";
+    public static final String CTRL_GATEWAY_CONNECTED = "GATEWAY_CONNECTED";
+    public static final String CTRL_GATEWAY_UPDATE = "GATEWAY_UPDATE";
     public static final String CTRL_REGISTER = "REGISTER";
     public static final String CTRL_RECONNECT = "RECONNECT";
     public static final String CTRL_RECONNECTED = "RECONNECTED";

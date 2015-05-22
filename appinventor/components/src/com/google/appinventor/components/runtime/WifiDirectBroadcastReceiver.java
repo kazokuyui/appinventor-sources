@@ -48,8 +48,11 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver implements
             }
 
             if (networkInfo.isConnected()) {
-                if(this.main.isReleased()) {
+                if(this.main.isReconnect()) {
                     this.main.reconnectedToNetwork();
+                }
+                else if(this.main.isGateway()) {
+                    this.main.connectedAsGateway();
                 }
                 else {
                     this.main.ConnectedToNetwork();

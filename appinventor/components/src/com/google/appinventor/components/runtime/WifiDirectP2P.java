@@ -68,13 +68,15 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     /* Application Layer Control Planes */
     private WifiDirectBroadcastReceiver receiver;
     private WifiDirectGroupServer groupServer;
+    private WifiDirectGateway gateway;
     private WifiDirectControlClient controlClient;
 
     private Handler handler;
     private Status status;
     private boolean isCalling;
     private boolean isReleased;
-    private String newPeerMacAddress;
+    private boolean isGateway;
+    private boolean isReconnect;
 
     public WifiDirectP2P(ComponentContainer container) {
         this(container.$form(), "WifiDirectP2P");
@@ -91,6 +93,8 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.status = Idle;
         this.isCalling = false;
         this.isReleased = false;
+        this.isGateway = false;
+        this.isReconnect = false;
     }
 
     /* Network Layer Events */
@@ -372,6 +376,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     public void Reconnect() {
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = this.originalGoMac;
+        this.isReconnect = true;
         this.connectToDevice(config);
     }
 
@@ -382,7 +387,12 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     @SimpleFunction(description = "Connect to a foreign device")
     public void ConnectToOther(String macAddress) {
-
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = macAddress;
+        config.groupOwnerIntent = 15;
+        this.isGateway = true;
+        this.isReconnect = false;
+        this.connectToDevice(config);
     }
 
     @SimpleFunction(description = "Stop the client")
@@ -493,16 +503,20 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     public void groupInfoAvailable() {
         this.NetworkInfoAvailable();
-        if(this.isReleased) {
+
+        if(this.mConnectionInfo.isGroupOwner) {
+            if(this.isGateway) {
+                this.startGateway();
+            }
+            if(this.groupServer == null || !this.groupServer.isAccepting) {
+                this.startGoServer();
+            }
+        }
+
+        if(this.isReconnect) {
             this.reconnectClient();
         }
         else {
-            if(this.mConnectionInfo.isGroupOwner) {
-                if(this.groupServer == null || !this.groupServer.isAccepting) {
-                    this.startGoServer();
-                }
-            }
-
             if(this.controlClient == null || !this.controlClient.isRunning) {
                 this.startClient(groupServerPort);
             }
@@ -522,6 +536,21 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
                         ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
                         e.getMessage());
             }
+        }
+    }
+
+    public void startGateway() {
+        try {
+            this.gateway = new WifiDirectGateway(this,
+                                                 this.mConnectionInfo.groupOwnerAddress,
+                                                 groupServerPort);
+            this.gateway.setHandler(this.handler);
+            this.gateway.setPeers(this.controlClient.getPeers());
+            AsynchUtil.runAsynchronously(this.gateway);
+        } catch (IOException e) {
+            wifiDirectError("startGateway",
+                            ErrorMessages.ERROR_WIFIDIRECT_UNABLE_TO_READ,
+                            e.getMessage());
         }
     }
 
@@ -545,6 +574,8 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         newPeer.setIpAddress(peer.getIpAddress());
         newPeer.setStatus(WifiDirectPeer.PEER_STATUS_INACTIVE);
         this.controlClient.setmPeer(newPeer);
+        this.controlClient.setPeers(this.gateway.getPeers());
+        this.controlClient.setMessages(this.gateway.getQueuedMessages());
         this.controlClient.reinitialize();
         AsynchUtil.runAsynchronously(this.controlClient);
     }
@@ -626,6 +657,10 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.isCalling = false;
     }
 
+    public void connectedAsGateway() {
+        this.requestConnectionInfo();
+    }
+
     public void reconnectedToNetwork() {
         this.requestConnectionInfo();
     }
@@ -659,6 +694,14 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     public boolean isReleased() {
         return this.isReleased;
+    }
+
+    public boolean isGateway() {
+        return isGateway;
+    }
+
+    public boolean isReconnect() {
+        return this.isReconnect;
     }
 
     public void wifiDirectError(String functionName, int errorCode, Object... args) {

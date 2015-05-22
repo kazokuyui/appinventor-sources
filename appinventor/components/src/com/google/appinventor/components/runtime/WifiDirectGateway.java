@@ -21,32 +21,33 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Java NIO Server for WifiDirect Component
+ * Java NIO Gateway for WifiDirect Component
  *
  * @author nmcalabroso@up.edu.ph (neil)
  * @author erbunao@up.edu.ph (earle)
  */
-
-public class WifiDirectGroupServer implements Runnable {
+public class WifiDirectGateway implements Runnable {
     private WifiDirectP2P p2p;
     private Handler handler;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
-    private WifiDirectGroupServerHandler serverHandler;
+    private WifiDirectGatewayHandler gatewayHandler;
 
     private InetAddress hostAddress;
     private int port;
 
-    private Collection<WifiDirectPeer> activePeers;
+    private Collection<WifiDirectPeer> peers;
+    private Collection<PeerMessage> queuedMessages;
     public boolean isAccepting;
 
-    public WifiDirectGroupServer(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
+    public WifiDirectGateway(WifiDirectP2P p2p, InetAddress hostAddress, int port) throws IOException {
         this.p2p = p2p;
         this.hostAddress = hostAddress;
         this.port = port;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
-        this.activePeers = new ArrayList<WifiDirectPeer>();
+        this.peers = new ArrayList<WifiDirectPeer>();
+        this.queuedMessages = new ArrayList<PeerMessage>();
         this.isAccepting = false;
     }
 
@@ -73,12 +74,10 @@ public class WifiDirectGroupServer implements Runnable {
                                                              Delimiters.lineDelimiter()));
                     p.addLast(new StringEncoder());
                     p.addLast(new StringDecoder());
-                    p.addLast(new WifiDirectGroupServerHandler(WifiDirectGroupServer.this));
+                    p.addLast(new WifiDirectGatewayHandler(WifiDirectGateway.this));
                 }
             });
-
             ChannelFuture f = b.bind(this.hostAddress, this.port).sync();
-            this.serverStarted();
             f.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -88,98 +87,27 @@ public class WifiDirectGroupServer implements Runnable {
         }
     }
 
-    public void stop() {
-        this.isAccepting = false;
-        this.bossGroup.shutdownGracefully();
-        this.workerGroup.shutdownGracefully();
-    }
-
     public void registerPeer(WifiDirectPeer peer) {
-        peer.setId(this.activePeers.size() + 1);
+        peer.setId(this.peers.size() + 1);
         peer.setStatus(WifiDirectPeer.PEER_STATUS_ACTIVE);
-        this.activePeers.add(peer);
-        this.peerRegistered(peer);
+        this.peers.add(peer);
     }
 
-    public WifiDirectPeer reconnectPeer(WifiDirectPeer reconnectingPeer) {
-        WifiDirectPeer originalPeer = this.getPeerById(reconnectingPeer.getId());
-        originalPeer.setIpAddress(reconnectingPeer.getIpAddress());
-        originalPeer.setStatus(WifiDirectPeer.PEER_STATUS_ACTIVE);
-        this.peerReconnected(originalPeer);
-        return originalPeer;
+    public void addPeerMessage(PeerMessage message) {
+        this.queuedMessages.add(message);
     }
 
-    public void permitInactivity(int peerId) {
-        WifiDirectPeer peer = this.getPeerById(peerId);
-        peer.setStatus(WifiDirectPeer.PEER_STATUS_INACTIVE);
-    }
-
-    public WifiDirectPeer getPeerById(int peerId) {
-        if(this.activePeers.size() > 0) {
-            for (WifiDirectPeer peer : this.activePeers) {
-                if(peer.getId() == peerId) {
-                    return peer;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public void removePeerById(int peerId) {
-        this.activePeers.remove(this.getPeerById(peerId));
-        this.peersChanged();
-    }
-
-    /* Server Events */
-    public void serverStarted() {
-        final String ipAddress = this.hostAddress.getHostAddress();
-        this.isAccepting = true;
-        this.handler.post(new Runnable() {
-            @Override
-            public void run() {
-                WifiDirectGroupServer.this.p2p.GoServerStarted(ipAddress);
-            }
-        });
-    }
-
-    public void peerConnected(final String peer) {
-        this.handler.post(new Runnable() {
-            @Override
-            public void run() {
-                WifiDirectGroupServer.this.p2p.ConnectionAccepted(peer);
-            }
-        });
-    }
-
-    public void peerRegistered(final WifiDirectPeer peer) {
-        this.handler.post(new Runnable() {
-            @Override
-            public void run() {
-                WifiDirectGroupServer.this.p2p.ConnectionRegistered(peer.getName());
-            }
-        });
-    }
-
-    public void peerReconnected(final WifiDirectPeer peer) {
-        this.handler.post(new Runnable() {
-            @Override
-            public void run() {
-                WifiDirectGroupServer.this.p2p.ConnectionReconnected(peer.getName());
-            }
-        });
-    }
-
+    /* Gateway Events */
     public void peersChanged() {
         PeerMessage msg = new PeerMessage(PeerMessage.CONTROL_DATA, PeerMessage.CTRL_PEERS_CHANGE, " ");
-        this.serverHandler.broadcastMessage(msg);
+        this.gatewayHandler.broadcastMessage(msg);
     }
 
     public void errorOccurred(final String functionName, final int errorCode, final String cause) {
         this.handler.post(new Runnable() {
             @Override
             public void run() {
-                WifiDirectGroupServer.this.p2p.wifiDirectError(functionName, errorCode, cause);
+                WifiDirectGateway.this.p2p.wifiDirectError(functionName, errorCode, cause);
             }
         });
     }
@@ -202,33 +130,22 @@ public class WifiDirectGroupServer implements Runnable {
         this.handler = handler;
     }
 
-    public void setServerHandler(WifiDirectGroupServerHandler serverHandler) {
-        this.serverHandler = serverHandler;
+    public void setGatewayHandler(WifiDirectGatewayHandler gatewayHandler) {
+        this.gatewayHandler = gatewayHandler;
     }
 
-    public void setActivePeers(Collection<WifiDirectPeer> activePeers) {
-        this.activePeers = activePeers;
+    public void setPeers(Collection<WifiDirectPeer> peers) {
+        this.peers = peers;
     }
 
-    public String getActivePeersList() {
-        String peerList = "";
-        if(!this.activePeers.isEmpty()) {
-            for (WifiDirectPeer peer : this.activePeers) {
-                if(peer.getStatus() == WifiDirectPeer.PEER_STATUS_ACTIVE) {
-                    peerList += peer + ",";
-                }
-            }
-        }
-        else {
-            peerList = "NIL";
-        }
-        return peerList;
+    public Collection<WifiDirectPeer> getPeers() {
+        return this.peers;
     }
 
     public String getPeersList() {
         String peerList = "";
-        if(!this.activePeers.isEmpty()) {
-            for (WifiDirectPeer peer : this.activePeers) {
+        if(!this.peers.isEmpty()) {
+            for (WifiDirectPeer peer : this.peers) {
                 peerList += peer+",";
             }
         }
@@ -236,6 +153,23 @@ public class WifiDirectGroupServer implements Runnable {
             peerList = "NIL";
         }
         return peerList;
+    }
+
+    public Collection<PeerMessage> getQueuedMessages() {
+        return this.queuedMessages;
+    }
+
+    public String getQueuedMessagesList() {
+        String messages = "";
+        if(!this.queuedMessages.isEmpty()) {
+            for (PeerMessage msg : this.queuedMessages) {
+                messages += msg+",";
+            }
+        }
+        else {
+            messages = "NIL";
+        }
+        return messages;
     }
 
     /* For testing purposes */

@@ -40,6 +40,13 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
             }
             else if(response.getHeader().equals(PeerMessage.CTRL_REGISTERED)) {
                 this.client.peerRegistered(Integer.parseInt(response.getData()));
+                if(this.client.isGatewayConnected) {
+                    this.client.isGatewayConnected = false;
+                    PeerMessage gatewayMsg = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                      PeerMessage.CTRL_GATEWAY_UPDATE,
+                                                      this.getGatewayUpdate());
+                    ctx.channel().writeAndFlush(gatewayMsg.toString());
+                }
             }
             else if(response.getHeader().equals(PeerMessage.CTRL_RECONNECTED)) {
                 this.client.peerReconnected();
@@ -64,6 +71,14 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
             }
             else if(response.getHeader().equals(PeerMessage.CTRL_ACCEPT_INACTIVITY)) {
                 this.client.inactivityAccepted(response.getData());
+            }
+            else if(response.getHeader().equals(PeerMessage.CTRL_GATEWAY_CONNECTED)) {
+                this.client.peerConnected(response.getData());
+                this.client.isGatewayConnected = true;
+                PeerMessage reply = new PeerMessage(PeerMessage.CONTROL_DATA,
+                                                    PeerMessage.CTRL_REGISTER,
+                                                    this.client.getmPeer().toString());
+                ctx.channel().writeAndFlush(reply.toString());
             }
         }
         else if(response.getType() == PeerMessage.USER_DATA) {
@@ -127,6 +142,31 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
                                           PeerMessage.CTRL_QUIT,
                                           Integer.toString(this.client.getmPeer().getId()));
         serverChannel.writeAndFlush(msg.toString());
+    }
+
+    public String getGatewayUpdate() {
+        String gatewayUpdate = "";
+        if(!this.client.getPeers().isEmpty()) {
+            for(WifiDirectPeer peer : this.client.getPeers()) {
+                gatewayUpdate += peer.toString() + ",";
+            }
+        }
+        else {
+            gatewayUpdate = "NIL";
+        }
+
+        gatewayUpdate += "#";
+
+        if(!this.client.getMessages().isEmpty()) {
+            for(PeerMessage msg: this.client.getMessages()) {
+                gatewayUpdate += msg.toString() + ",";
+            }
+        }
+        else {
+            gatewayUpdate += "NIL";
+        }
+
+        return  gatewayUpdate;
     }
 
     public PeerMessage parseResponse(String response) {
