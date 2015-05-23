@@ -74,7 +74,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     private Status status;
     private boolean isCalling;
     private boolean isReleased;
-    private String newPeerMacAddress;
 
     public WifiDirectP2P(ComponentContainer container) {
         this(container.$form(), "WifiDirectP2P");
@@ -199,9 +198,9 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         EventDispatcher.dispatchEvent(this, "PeersChanged");
     }
 
-    @SimpleEvent(description = "Data received")
-    public void DataReceived(String peer, String data) {
-        EventDispatcher.dispatchEvent(this, "DataReceived", peer, data);
+    @SimpleEvent(description = "Message is received")
+    public void MessageReceived(String peer, String msg) {
+        EventDispatcher.dispatchEvent(this, "MessageReceived", peer, msg);
     }
 
     @SimpleEvent(description = "Call request received")
@@ -234,7 +233,7 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
 
     /* Component Properties */
     @SimpleProperty(description = "Returns the representation of this device with the format" +
-                    "[deviceName] deviceMACAddress",
+                    "deviceName@deviceMACAddress",
                     category = PropertyCategory.BEHAVIOR)
     public String Device() {
         return deviceToString(this.mDevice);
@@ -380,11 +379,6 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
         this.controlClient.requestInactivity();
     }
 
-    @SimpleFunction(description = "Connect to a foreign device")
-    public void ConnectToOther(String macAddress) {
-
-    }
-
     @SimpleFunction(description = "Stop the client")
     public void Disconnect() {
         this.controlClient.stop();
@@ -416,8 +410,13 @@ public class WifiDirectP2P extends AndroidNonvisibleComponent implements Compone
     }
 
     @SimpleFunction(description = "Broadcast string to the network")
-    public void SendData(String msg) {
-        this.controlClient.sendMessage(msg);
+    public void BroadcastMessage(String msg) {
+        this.controlClient.broadcastMessage(msg);
+    }
+
+    @SimpleFunction(description = "Send string to the particular peer given the peer id via the group owner")
+    public void SendMessageTo(int peerId, String msg) {
+        this.controlClient.sendMessage(peerId, msg);
     }
 
     @SimpleFunction(description = "Send a call request to another peer")

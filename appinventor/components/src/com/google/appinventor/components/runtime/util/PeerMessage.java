@@ -23,6 +23,7 @@ public class PeerMessage {
     public static final String CTRL_REQUEST_INACTIVITY = "REQUEST_INACTIVITY";
     public static final String CTRL_ACCEPT_INACTIVITY = "ACCEPT_INACTIVITY";
     public static final String CTRL_QUIT = "QUIT";
+    public static final String USR_BROADCAST = "BROADCAST";
     public static final String USR_MESSAGE = "MESSAGE";
 
     private int type;

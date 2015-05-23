@@ -55,12 +55,12 @@ public class TranslationComponentMethods {
     map.put("Connect", MESSAGES.ConnectMethods());
     map.put("Reconnect", MESSAGES.ReconnectMethods());
     map.put("RequestInactive", MESSAGES.RequestInactiveMethods());
-    map.put("ConnectToOther", MESSAGES.ConnectToOtherMethods());
     map.put("ConnectWithUUID", MESSAGES.ConnectWithUUIDMethods());
     map.put("Disconnect", MESSAGES.DisconnectMethods());
     map.put("DiscoverDevices", MESSAGES.DiscoverDevicesMethods());
     map.put("RequestPeers", MESSAGES.RequestPeersMethods());
-    map.put("SendData", MESSAGES.SendDataMethods());
+    map.put("BroadcastMessage", MESSAGES.BroadcastMessageMethods());
+    map.put("SendMessageTo", MESSAGES.SendMessageToMethods());
     map.put("CallPeer", MESSAGES.CallPeerMethods());
     map.put("AcceptCall", MESSAGES.AcceptCallMethods());
     map.put("RejectCall", MESSAGES.RejectCallMethods());
@@ -133,7 +133,6 @@ public class TranslationComponentMethods {
     map.put("LeaveInstance", MESSAGES.LeaveInstanceMethods());
     map.put("MakeNewInstance", MESSAGES.MakeNewInstanceMethods());
     map.put("SendMessage", MESSAGES.SendMessageMethods());
-    map.put("SendMessage", MESSAGES.ReceiveMessageMethods());
     map.put("ServerCommand", MESSAGES.ServerCommandMethods());
     map.put("SetInstance", MESSAGES.SetInstanceMethods());
     map.put("SetLeader", MESSAGES.SetLeaderMethods());

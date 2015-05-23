@@ -150,7 +150,6 @@ public class TranslationComponentEvents {
     map.put("ConnectionReconnected", MESSAGES.ConnectionReconnectedEvents());
     map.put("PeersAvailable", MESSAGES.PeersAvailableEvents());
     map.put("PeersChanged", MESSAGES.PeersChangedEvents());
-    map.put("DataReceived", MESSAGES.DataReceivedEvents());
     map.put("CallReceived", MESSAGES.CallReceivedEvents());
     map.put("CallAccepted", MESSAGES.CallAcceptedEvents());
     map.put("CallRejected", MESSAGES.CallRejectedEvents());

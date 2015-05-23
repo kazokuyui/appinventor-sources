@@ -3771,10 +3771,6 @@ public interface OdeMessages extends Messages {
   @Description("")
   String PeersChangedEvents();
 
-  @DefaultMessage("DataReceived")
-  @Description("")
-  String DataReceivedEvents();
-
   @DefaultMessage("CallReceived")
   @Description("")
   String CallReceivedEvents();
@@ -4175,9 +4171,6 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("RequestInactive")
   @Description("")
   String RequestInactiveMethods();
-  @DefaultMessage("ConnectToOther")
-  @Description("")
-  String ConnectToOtherMethods();
 
   @DefaultMessage("ConnectWithUUID")
   @Description("")
@@ -4191,7 +4184,7 @@ public interface OdeMessages extends Messages {
   @Description("")
   String DiscoverDevicesMethods();
 
-  @DefaultMessage("SendData")
+  @DefaultMessage("SendMessage")
   @Description("")
   String SendDataMethods();
 
@@ -4214,6 +4207,14 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("RequestPeers")
   @Description("")
   String RequestPeersMethods();
+
+  @DefaultMessage("BroadcastMessage")
+  @Description("")
+  String BroadcastMessageMethods();
+
+  @DefaultMessage("SendMessageTo")
+  @Description("")
+  String SendMessageToMethods();
 
   @DefaultMessage("IsDevicePaired")
   @Description("")
@@ -4766,10 +4767,6 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("SendMessage")
   @Description("")
   String SendMessageMethods();
-
-  @DefaultMessage("ReceiveMessage")
-  @Description("")
-  String ReceiveMessageMethods();
 
   @DefaultMessage("GetValue")
   @Description("")

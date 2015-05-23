@@ -110,8 +110,13 @@ public class WifiDirectControlClientHandler extends ChannelInboundHandlerAdapter
         serverChannel.writeAndFlush(msg.toString());
     }
 
-    public void sendMessage(Channel serverChannel, String text) {
-        PeerMessage msg = new PeerMessage(PeerMessage.USER_DATA, PeerMessage.USR_MESSAGE, text);
+    public void broadcastMessage(Channel serverChannel, String text) {
+        PeerMessage msg = new PeerMessage(PeerMessage.USER_DATA, PeerMessage.USR_BROADCAST, text);
+        serverChannel.writeAndFlush(msg.toString());
+    }
+
+    public void sendMessage(Channel serverChannel, int peerId, String text) {
+        PeerMessage msg = new PeerMessage(PeerMessage.USER_DATA, PeerMessage.USR_MESSAGE, peerId + "@" + text);
         serverChannel.writeAndFlush(msg.toString());
     }
 

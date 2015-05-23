@@ -30,7 +30,7 @@ public class WifiDirectUtil {
     public static final int callBufferSize = callVoiceInterval*callVoiceInterval*callVoiceByteSize*2;
 
     public static String deviceToString(WifiP2pDevice device) {
-        return "[" + device.deviceName + "] " + device.deviceAddress;
+        return device.deviceName + "@" + device.deviceAddress;
     }
 
     public static String getPeerIp(String peer) {
